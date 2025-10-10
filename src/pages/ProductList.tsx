@@ -241,22 +241,20 @@ const ProductList: React.FC = () => {
         </div>
 
         {/* === EN-TÊTE DES RÉSULTATS === */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="flex items-center gap-4 mb-4 lg:mb-0">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Produits disponibles
-            </h2>
-            <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+          <div className="flex items-center gap-3 mb-3 lg:mb-0">
+            <h2 className="text-xl font-semibold text-gray-900">Produits</h2>
+            <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs font-medium">
               {products.length} produit{products.length > 1 ? "s" : ""}
             </span>
           </div>
 
           <Link
             to="/cart"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md text-sm"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -268,7 +266,7 @@ const ProductList: React.FC = () => {
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-            Voir le panier
+            Panier
           </Link>
         </div>
 
@@ -297,7 +295,7 @@ const ProductList: React.FC = () => {
           </div>
         )}
 
-        {/* === GRILLE DES PRODUITS === */}
+        {/* === GRILLE DES PRODUITS - 6 PAR LIGNE === */}
         {products.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <svg
@@ -332,25 +330,25 @@ const ProductList: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
 
             {/* PAGINATION/FOOTER */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
-              <p className="text-gray-600 mb-4">
-                Vous avez consulté {products.length} produit
-                {products.length > 1 ? "s" : ""} sur {products.length}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+              <p className="text-gray-600 text-sm mb-3">
+                {products.length} produit{products.length > 1 ? "s" : ""}{" "}
+                affiché{products.length > 1 ? "s" : ""}
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Link
                   to="/"
-                  className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg font-medium transition-colors"
+                  className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors text-sm"
                 >
                   <svg
-                    className="w-4 h-4"
+                    className="w-3 h-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -362,11 +360,11 @@ const ProductList: React.FC = () => {
                       d="M10 19l-7-7m0 0l7-7m-7 7h18"
                     />
                   </svg>
-                  Retour à l'accueil
+                  Accueil
                 </Link>
                 <button
                   onClick={handleReset}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
                 >
                   Tout afficher
                 </button>

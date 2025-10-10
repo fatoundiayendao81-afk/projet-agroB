@@ -200,7 +200,7 @@ const Home: React.FC = () => {
                   </div>
 
                   {/* Titre principal */}
-                  <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
+                  <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
                     {slide.title.split(" ").map((word, i) => (
                       <span
                         key={i}
