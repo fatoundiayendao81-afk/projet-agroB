@@ -24,7 +24,7 @@
       "address": "123 Rue de l'Agriculture, Paris",
       "blocked": false,
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastLogin": "2025-10-10T15:10:22.000Z"
+      "lastLogin": "2025-10-09T23:29:12.837Z"
     },
     {
       "id": "2",
@@ -64,7 +64,7 @@
       "address": "15 Avenue des Champs, 75008 Paris",
       "blocked": false,
       "createdAt": "2024-01-04T00:00:00.000Z",
-      "lastLogin": "2025-10-10T15:29:34.938Z"
+      "lastLogin": "2025-10-09T17:07:55.048Z"
     },
     {
       "id": "5",
@@ -153,6 +153,7 @@
       "stock": 100,
       "createdAt": "2024-01-17T00:00:00.000Z"
     },
+
     {
       "id": "4",
       "title": "Carottes fraîches",
@@ -172,7 +173,7 @@
       "id": "5",
       "title": "Poivrons rouges",
       "description": "Poivrons rouges juteux, cultivés en permaculture, riches en vitamine C",
-      "price": 3,
+      "price": 3.0,
       "category": "légumes",
       "image": "https://tse3.mm.bing.net/th/id/OIP.iDFca2-p0-ClwEupct0MTQHaHa?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3",
       "sellerId": "4",
@@ -202,7 +203,7 @@
       "id": "7",
       "title": "Bananes douces",
       "description": "Bananes mûres et douces, cultivées sans traitement chimique",
-      "price": 2,
+      "price": 2.0,
       "category": "fruits",
       "image": "https://c8.alamy.com/compfr/2jywttf/gaziantep-turquie-31st-aout-2022-gaziantep-turquie-31-aout-2022-un-bouquet-de-bananes-mures-cultivees-en-turquie-credit-image-zakariya-yahya-imageslive-via-zuma-press-wire-2jywttf.jpg",
       "sellerId": "5",
@@ -217,7 +218,7 @@
       "id": "8",
       "title": "Mil complet",
       "description": "Mil local non transformé, idéal pour les bouillies et couscous traditionnels",
-      "price": 1,
+      "price": 1.0,
       "category": "grains",
       "image": "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&w=500&q=80",
       "sellerId": "6",
