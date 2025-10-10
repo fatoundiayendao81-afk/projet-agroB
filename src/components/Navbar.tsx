@@ -1,103 +1,98 @@
-// import React from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-// import { useAuth } from "../context/AuthContext";
-// import { useCart } from "../context/CartContext";
-import { ShoppingCart, HelpCircle, Mail } from "lucide-react"; // Icônes modernes
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { ShoppingCart, HelpCircle, Mail } from "lucide-react";
 
-const Navbar = () => {
-//   const { currentUser, logout } = useAuth();
-//   const { getCartItemsCount } = useCart();
+const Navbar: React.FC = () => {
+  const { currentUser, logout } = useAuth();
+  const { getCartItemsCount } = useCart();
 
   return (
-    <nav className="bg-green-900 text-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between px-4 py-2 space-y-2 sm:space-y-0">
-        {/* --- Partie gauche : logo + email + aide + panier --- */}
-        <div className="flex items-center space-x-6">
-          {/* Logo et nom */}
+    <nav className="bg-green-900 shadow-md border-b">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-green-900 px-4 py-2 flex justify-between items-center text-sm text-white">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-1">
+              <Mail size={14} />
+              <span>info@agrobusiness.com</span>
+            </div>
+            <div className="flex items-center space-x-1 cursor-pointer hover:text-white">
+              <HelpCircle size={14} />
+              <span>Aide</span>
+            </div>
+          </div>
+
           <Link
-            to="/"
-            className="flex items-center text-lg font-semibold hover:text-gray-300 transition-colors"
+            to="/cart"
+            className="flex items-center space-x-1 hover:text-green-700"
           >
-            <img
-              src="/logo_agro.png" // remplace par ton logo
-              alt="AgroBusiness Logo"
-              className="w-8 h-8 rounded-full mr-2"
-            />
-            AgroBusiness
-          </Link>
-
-          {/* Email de contact */}
-          <div className="flex items-center space-x-2 text-sm">
-            <Mail size={16} />
-            <a
-              href="mailto:info@agrobusiness.com"
-              className="hover:text-gray-300 transition-colors"
-            >
-              info@agrobusiness.com
-            </a>
-          </div>
-
-          {/* Aide */}
-          <div className="flex items-center space-x-1 text-sm hover:text-gray-300 cursor-pointer">
-            <HelpCircle size={16} />
-            <span>Aide</span>
-          </div>
-
-          {/* Panier */}
-          <Link to="/cart" className="flex items-center space-x-1 relative">
-            <ShoppingCart size={18} />
+            <ShoppingCart size={16} />
             <span>Panier</span>
-            {/* {getCartItemsCount() > 0 && (
-              <span className="absolute -top-2 -right-2 bg-white text-green-900 text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+            {getCartItemsCount() > 0 && (
+              <span className="bg-green-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-1">
                 {getCartItemsCount()}
               </span>
-            )} */}
+            )}
           </Link>
         </div>
 
-        {/* --- Partie droite : menu + recherche + bouton connexion --- */}
-        <div className="flex items-center space-x-4">
-          <Link to="/" className="hover:text-gray-300 text-sm">
-            Accueil
-          </Link>
-          <Link to="/products" className="hover:text-gray-300 text-sm">
-            Produit
-          </Link>
-          <Link to="/about" className="hover:text-gray-300 text-sm">
-            À propos
+        <div className="px-4 py-3 flex items-center justify-between">
+          <Link to="/" className="flex items-center space-x-2">
+            <img
+              src="/logo_agro.png"
+              alt="AgroBusiness Logo"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+            <span className="text-xl-w font-bold text-white">AgroBusiness</span>
           </Link>
 
-          {/* Barre de recherche */}
-          {/* <input
-            type="text"
-            placeholder="Recherche"
-            className="px-3 py-1 text-black rounded-full text-sm focus:outline-none"
-          /> */}
-
-          {/* Connexion / Profil */}
-          {/* {currentUser ? ( */}
-            <>
-              <Link
-                to="/profile"
-                className="hover:text-gray-300 text-sm font-medium"
-              >
-                {/* {currentUser.name || "Profil"} */}
-              </Link>
-              <button
-                // onClick={logout}
-                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-sm transition-colors"
-              >
-                Déconnexion
-              </button>
-            </>
-          {/* ) : ( */}
+          <div className="flex items-center space-x-8">
             <Link
-              to="/login"
-              className="bg-white text-green-900 hover:bg-gray-100 px-3 py-1 rounded-full text-sm font-semibold transition-colors"
+              to="/"
+              className="text-white hover:text-green-700 font-medium transition-colors"
             >
-              Connexion
+              Accueil
             </Link>
-          {/* )} */}
+            <Link
+              to="/products"
+              className="text-white hover:text-green-700 font-medium transition-colors"
+            >
+              Produit
+            </Link>
+            <Link
+              to="/about"
+              className="text-white hover:text-green-700 font-medium transition-colors"
+            >
+              A Propos
+            </Link>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {currentUser ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="text-white hover:text-green-700 font-medium"
+                >
+                  {currentUser.name || "Profil"}
+                </Link>
+                <button
+                  onClick={logout}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                >
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Connexion
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </nav>
@@ -105,11 +100,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-// function useCart(): { getCartItemsCount: any; } {
-//     throw new Error("Function not implemented.");
-// }
-
-// function useAuth(): { currentUser: any; logout: any; } {
-//     throw new Error("Function not implemented.");
-// }
-
