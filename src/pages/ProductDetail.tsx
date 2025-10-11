@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { productService } from "../services/productService";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import type { Product } from "../types";
 
@@ -16,7 +16,7 @@ const ProductDetail: React.FC = () => {
     text: "",
   });
 
-  const { addToCart } = useCart();
+  const { addToCart } = useCartStore();
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -61,9 +61,16 @@ const ProductDetail: React.FC = () => {
         return;
       }
 
-      for (let i = 0; i < quantity; i++) {
-        addToCart(product);
-      }
+      // Ajouter la quantité spécifiée au panier
+      addToCart({
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        image:
+          product.image ||
+          "https://via.placeholder.com/300x200?text=Produit+Agricole",
+        quantity: quantity,
+      });
 
       setMessage({
         type: "success",

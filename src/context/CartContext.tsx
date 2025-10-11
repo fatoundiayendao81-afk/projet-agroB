@@ -1,80 +1,84 @@
-import React, { createContext, useState, useContext } from "react";
-import type { ReactNode } from "react";
-import type { Product, CartItem, CartContextType } from "../types";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
-
-export const useCart = (): CartContextType => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-  return context;
-};
-
-interface CartProviderProps {
-  children: ReactNode;
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
 }
 
-export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+interface CartStore {
+  cartItems: CartItem[];
+  addToCart: (product: CartItem) => void;
+  removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
+  getCartTotal: () => number;
+  getCartItemsCount: () => number;
+}
 
-  const addToCart = (product: Product): void => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      cartItems: [],
+
+      addToCart: (product) => {
+        set((state) => {
+          const existingItem = state.cartItems.find(
+            (item) => item.id === product.id
+          );
+          if (existingItem) {
+            return {
+              cartItems: state.cartItems.map((item) =>
+                item.id === product.id
+                  ? { ...item, quantity: item.quantity + 1 }
+                  : item
+              ),
+            };
+          }
+          return {
+            cartItems: [...state.cartItems, { ...product, quantity: 1 }],
+          };
+        });
+      },
+
+      removeFromCart: (id) => {
+        set((state) => ({
+          cartItems: state.cartItems.filter((item) => item.id !== id),
+        }));
+      },
+
+      updateQuantity: (id, quantity) => {
+        if (quantity < 1) return;
+
+        set((state) => ({
+          cartItems: state.cartItems.map((item) =>
+            item.id === id ? { ...item, quantity } : item
+          ),
+        }));
+      },
+
+      clearCart: () => {
+        set({ cartItems: [] });
+      },
+
+      getCartTotal: () => {
+        const { cartItems } = get();
+        return cartItems.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0
         );
-      }
-      return [...prevItems, { ...product, quantity: 1 }];
-    });
-  };
+      },
 
-  const removeFromCart = (productId: string): void => {
-    setCartItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId)
-    );
-  };
-
-  const updateQuantity = (productId: string, quantity: number): void => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
+      getCartItemsCount: () => {
+        const { cartItems } = get();
+        return cartItems.reduce((total, item) => total + item.quantity, 0);
+      },
+    }),
+    {
+      name: "cart-storage", // Sauvegarde automatique dans localStorage
     }
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
-      )
-    );
-  };
-
-  const clearCart = (): void => {
-    setCartItems([]);
-  };
-
-  const getCartTotal = (): number => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
-  };
-
-  const getCartItemsCount = (): number => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
-  };
-
-  const value: CartContextType = {
-    cartItems,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    getCartTotal,
-    getCartItemsCount,
-  };
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-};
+  )
+);

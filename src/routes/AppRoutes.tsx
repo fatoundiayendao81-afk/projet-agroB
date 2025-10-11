@@ -8,11 +8,14 @@ import ProductList from "../pages/ProductList";
 import ProductDetail from "../pages/ProductDetail";
 import Cart from "../pages/Cart";
 import AdminDashboard from "../pages/AdminDashboard";
+import ProducerDashboard from "../pages/ProducerDashboard";
+import ClientDashboard from "../pages/ClientDashboard";
 import MyProducts from "../pages/MyProducts";
 import Livraison from "../components/Livraison";
 import Payment from "../components/Payment";
 import Confirmation from "../components/Confirmation";
 import About from "../pages/About";
+
 
 const AppRoutes: React.FC = () => {
   return (
@@ -25,6 +28,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/producer" element={<ProducerDashboard />} />
+      <Route path="/client" element={<ClientDashboard />} />
       <Route path="/my-products" element={<MyProducts />} />
       <Route path="/livraison" element={<Livraison />} />
       <Route path="/paiement" element={<Payment />} />

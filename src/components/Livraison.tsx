@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
 interface FormData {
@@ -13,7 +13,7 @@ interface FormData {
 }
 
 const Livraison: React.FC = () => {
-  const { getCartTotal } = useCart();
+  const { getCartTotal } = useCartStore();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<FormData>({

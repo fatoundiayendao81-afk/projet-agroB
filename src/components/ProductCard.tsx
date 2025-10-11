@@ -1,16 +1,26 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "../context/CartContext";
 import type { ProductCardProps } from "../types";
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { currentUser } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart } = useCartStore();
 
   const imageUrl =
     product.image ||
     "https://via.placeholder.com/300x200?text=Produit+Agricole";
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.title,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
+    });
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -52,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {currentUser && currentUser.role === "client" && (
             <button
-              onClick={() => addToCart(product)}
+              onClick={handleAddToCart}
               className="border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white py-3 px-4 rounded-lg font-medium transition-all duration-200"
             >
               Ajouter au panier

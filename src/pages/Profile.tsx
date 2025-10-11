@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { productService } from "../services/productService";
 import orderService from "../services/orderService";
-import type {Product, Order } from "../types";
+import type { Product, Order } from "../types";
 
 interface ProfileForm {
   name: string;
@@ -175,7 +175,7 @@ const Profile: React.FC = () => {
         loadRoleSpecificData();
       } catch (error) {
         setMessage({
-            type: "error",
+          type: "error",
           text: "Erreur lors de la suppression du produit",
         });
       }
@@ -340,7 +340,7 @@ const Profile: React.FC = () => {
                       onChange={handleChange}
                       disabled={!isEditing}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed resize-vertical"
-                        rows={2}
+                      rows={2}
                     />
                   </div>
                 </div>
@@ -695,3 +695,270 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+
+// import React, { useState, useEffect } from "react";
+// import { useAuth } from "../context/AuthContext";
+// import { productService } from "../services/productService";
+// import orderService from "../services/orderService";
+// import type {Product, Order } from "../types";
+
+// interface ProfileForm {
+//   name: string;
+//   email: string;
+//   phone: string;
+//   address: string;
+//   farmName: string;
+//   description: string;
+// }
+
+// interface Stats {
+//   productsCount: number;
+//   ordersCount: number;
+//   pendingProducts: number;
+//   totalSales: number;
+// }
+
+// const Profile: React.FC = () => {
+//   const { currentUser, updateProfile, isClient, isProducer, isAdmin } =
+//     useAuth();
+
+//   const [profile, setProfile] = useState<ProfileForm>({
+//     name: "",
+//     email: "",
+//     phone: "",
+//     address: "",
+//     farmName: "",
+//     description: "",
+//   });
+
+//   const [isEditing, setIsEditing] = useState<boolean>(false);
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [message, setMessage] = useState<{ type: string; text: string }>({
+//     type: "",
+//     text: "",
+//   });
+
+//   const [userProducts, setUserProducts] = useState<Product[]>([]);
+//   const [userOrders, setUserOrders] = useState<Order[]>([]);
+//   const [stats, setStats] = useState<Stats>({
+//     productsCount: 0,
+//     ordersCount: 0,
+//     pendingProducts: 0,
+//     totalSales: 0,
+//   });
+
+//   useEffect(() => {
+//     if (currentUser) {
+//       setProfile({
+//         name: currentUser.name || "",
+//         email: currentUser.email || "",
+//         phone: currentUser.phone || "",
+//         address: currentUser.address || "",
+//         farmName: currentUser.farmName || "",
+//         description: currentUser.description || "",
+//       });
+
+//       loadRoleSpecificData();
+//     }
+//   }, [currentUser]);
+
+//   const loadRoleSpecificData = async (): Promise<void> => {
+//     try {
+//       if (isClient() && currentUser) {
+//         const orders = await orderService.getUserOrders(currentUser.id);
+//         setUserOrders(orders || []);
+//         setStats((prev) => ({ ...prev, ordersCount: orders?.length || 0 }));
+//       } else if (isProducer() && currentUser) {
+//         const products = await productService.getUserProducts(currentUser.id);
+//         setUserProducts(products || []);
+
+//         const pendingCount =
+//           products?.filter((p: Product) => p.status === "pending").length || 0;
+//         setStats((prev) => ({
+//           ...prev,
+//           productsCount: products?.length || 0,
+//           pendingProducts: pendingCount,
+//         }));
+//       } else if (isAdmin()) {
+//         const allProducts = await productService.getProducts();
+//         const pendingCount =
+//           allProducts?.filter((p: Product) => p.status === "pending").length ||
+//           0;
+
+//         const allOrders = await orderService.getAllOrders();
+//         const totalSales =
+//           allOrders?.reduce(
+//             (sum: number, order: Order) => sum + (order.total || 0),
+//             0
+//           ) || 0;
+
+//         setStats((prev) => ({
+//           ...prev,
+//           productsCount: allProducts?.length || 0,
+//           ordersCount: allOrders?.length || 0,
+//           pendingProducts: pendingCount,
+//           totalSales: totalSales,
+//         }));
+//       }
+//     } catch (error) {
+//       console.error("Erreur lors du chargement des données:", error);
+//     }
+//   };
+
+//   const handleChange = (
+//     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+//   ): void => {
+//     const { name, value } = e.target;
+//     setProfile((prev) => ({
+//       ...prev,
+//       [name]: value,
+//     }));
+//   };
+
+//   const handleSave = async (): Promise<void> => {
+//     if (!isEditing) {
+//       setIsEditing(true);
+//       return;
+//     }
+
+//     setLoading(true);
+//     setMessage({ type: "", text: "" });
+
+//     try {
+//       await updateProfile(profile);
+//       setMessage({
+//         type: "success",
+//         text: "Profil mis à jour avec succès !",
+//       });
+//       setIsEditing(false);
+//     } catch (error) {
+//       setMessage({
+//         type: "error",
+//         text:
+//           (error as Error).message || "Erreur lors de la mise à jour du profil",
+//       });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleCancel = (): void => {
+//     if (currentUser) {
+//       setProfile({
+//         name: currentUser.name || "",
+//         email: currentUser.email || "",
+//         phone: currentUser.phone || "",
+//         address: currentUser.address || "",
+//         farmName: currentUser.farmName || "",
+//         description: currentUser.description || "",
+//       });
+//     }
+//     setIsEditing(false);
+//     setMessage({ type: "", text: "" });
+//   };
+
+//   const handleAddProduct = (): void => {
+//     window.location.href = "/add-product";
+//   };
+
+//   const handleEditProduct = (productId: string): void => {
+//     window.location.href = `/edit-product/${productId}`;
+//   };
+
+//   const handleDeleteProduct = async (productId: string): Promise<void> => {
+//     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
+//       try {
+//         await productService.deleteProduct(productId);
+//         setMessage({ type: "success", text: "Produit supprimé avec succès !" });
+//         loadRoleSpecificData();
+//       } catch (error) {
+//         setMessage({
+//             type: "error",
+//           text: "Erreur lors de la suppression du produit",
+//         });
+//       }
+//     }
+//   };
+
+//   // === FONCTIONS DE REDIRECTION VERS LES DASHBOARDS ===
+//   const goToAdminDashboard = (): void => {
+//     window.location.href = "/admin-dashboard";
+//   };
+
+//   const goToProducerDashboard = (): void => {
+//     window.location.href = "/producer-dashboard";
+//   };
+
+//   const goToClientDashboard = (): void => {
+//     window.location.href = "/client-dashboard";
+//   };
+
+//   // Redirection automatique selon le rôle
+//   useEffect(() => {
+//     if (currentUser) {
+//       if (isAdmin()) {
+//         goToAdminDashboard();
+//       } else if (isProducer()) {
+//         goToProducerDashboard();
+//       } else if (isClient()) {
+//         goToClientDashboard();
+//       }
+//     }
+//   }, [currentUser]);
+
+//   if (!currentUser) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+//         <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center border border-gray-200">
+//           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+//             <span className="text-2xl">🔒</span>
+//           </div>
+//           <h2 className="text-2xl font-bold text-gray-800 mb-2">
+//             Non connecté
+//           </h2>
+//           <p className="text-gray-600 mb-6">
+//             Veuillez vous connecter pour accéder à votre profil
+//           </p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Message de redirection pendant le chargement
+//   return (
+//     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+//       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center border border-gray-200">
+//         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+//           <span className="text-2xl">
+//             {isAdmin() ? "👨‍💼" : isProducer() ? "👨‍🌾" : "👤"}
+//           </span>
+//         </div>
+//         <h2 className="text-2xl font-bold text-gray-800 mb-2">
+//           Redirection en cours...
+//         </h2>
+//         <p className="text-gray-600 mb-4">
+//           {isAdmin() && "Redirection vers le tableau de bord administrateur"}
+//           {isProducer() && "Redirection vers le tableau de bord producteur"}
+//           {isClient() && "Redirection vers le tableau de bord client"}
+//         </p>
+//         <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto"></div>
+
+//         {/* Bouton de secours si la redirection échoue */}
+//         <div className="mt-6">
+//           <button
+//             onClick={() => {
+//               if (isAdmin()) goToAdminDashboard();
+//               else if (isProducer()) goToProducerDashboard();
+//               else if (isClient()) goToClientDashboard();
+//             }}
+//             className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+//           >
+//             Rediriger manuellement
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Profile;

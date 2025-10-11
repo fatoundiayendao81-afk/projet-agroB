@@ -24,7 +24,7 @@
       "address": "123 Rue de l'Agriculture, Paris",
       "blocked": false,
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastLogin": "2025-10-10T15:10:22.000Z"
+      "lastLogin": "2025-10-11T15:56:27.492Z"
     },
     {
       "id": "2",
@@ -104,7 +104,7 @@
       "description": "",
       "blocked": false,
       "createdAt": "2025-10-09T23:29:55.057Z",
-      "lastLogin": null
+      "lastLogin": "2025-10-11T15:07:39.072Z"
     }
   ],
   "products": [

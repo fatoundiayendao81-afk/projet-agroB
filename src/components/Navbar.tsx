@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "../context/CartContext";
 import {
   ShoppingCart,
   HelpCircle,
@@ -15,7 +15,7 @@ import {
 
 const Navbar: React.FC = () => {
   const { currentUser, logout } = useAuth();
-  const { getCartItemsCount } = useCart();
+  const { getCartItemsCount } = useCartStore();
   const location = useLocation();
 
   const isActiveRoute = (path: string): boolean => {

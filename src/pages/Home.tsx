@@ -31,7 +31,7 @@ const Home: React.FC = () => {
       description:
         "Des produits agricoles frais directement de nos producteurs locaux",
       badge: "🌱 Fraîcheur Garantie",
-      gradient: "from-green-600/90 to-green-800/90",
+      gradient: "from-black/40 to-black/60", // Overlay plus léger
     },
     {
       id: 2,
@@ -40,7 +40,7 @@ const Home: React.FC = () => {
       title: "Circuit Court Garanti",
       description: "Soutenez l'agriculture locale avec des produits de qualité",
       badge: "🔄 Circuit Court",
-      gradient: "from-green-700/90 to-green-900/90",
+      gradient: "from-black/30 to-black/50", // Overlay plus léger
     },
   ];
 
@@ -143,7 +143,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* === HERO CAROUSEL RÉDUIT === */}
+      {/* === HERO CAROUSEL CORRIGÉ === */}
       <section className="relative h-96 overflow-hidden">
         <div className="relative h-full">
           {carouselImages.map((slide, index) => (
@@ -155,10 +155,13 @@ const Home: React.FC = () => {
                   : "opacity-0 transform translate-x-4"
               }`}
             >
+              {/* Image de fond visible */}
               <div
-                className="absolute inset-0 bg-cover bg-center"
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url(${slide.image})` }}
               ></div>
+
+              {/* Overlay noir transparent au lieu de vert */}
               <div
                 className={`absolute inset-0 bg-gradient-to-r ${slide.gradient}`}
               ></div>
@@ -174,7 +177,7 @@ const Home: React.FC = () => {
                     {slide.title}
                   </h1>
 
-                  <p className="text-sm md:text-base mb-6 max-w-md mx-auto text-green-100">
+                  <p className="text-sm md:text-base mb-6 max-w-md mx-auto text-gray-100">
                     {slide.description}
                   </p>
 

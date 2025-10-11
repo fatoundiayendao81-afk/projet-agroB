@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "../context/CartContext";
 
 const Payment: React.FC = () => {
   const navigate = useNavigate();
-  const { getCartTotal, cartItems } = useCart();
+  const { getCartTotal, cartItems } = useCartStore();
 
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [promoCode, setPromoCode] = useState<string>("");
