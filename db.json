@@ -24,7 +24,7 @@
       "address": "123 Rue de l'Agriculture, Paris",
       "blocked": false,
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastLogin": "2025-10-13T12:21:52.079Z"
+      "lastLogin": "2025-10-13T13:20:18.163Z"
     },
     {
       "id": "2",
@@ -38,7 +38,7 @@
       "description": "Producteur bio depuis 15 ans",
       "blocked": false,
       "createdAt": "2024-01-02T00:00:00.000Z",
-      "lastLogin": "2025-10-13T12:16:20.912Z"
+      "lastLogin": "2025-10-13T13:20:48.411Z"
     },
     {
       "id": "3",
