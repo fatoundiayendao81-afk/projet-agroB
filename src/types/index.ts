@@ -1,4 +1,4 @@
-// Types de base
+// types/index.ts
 export interface User {
   id: string;
   name: string;
@@ -28,7 +28,7 @@ export interface Product {
   available: boolean;
   stock: number;
   createdAt: string;
-  status?: string;
+  status?: "pending" | "approved" | "rejected";
 }
 
 export interface CartItem extends Product {
@@ -39,9 +39,11 @@ export interface CartItem extends Product {
 export interface Order {
   id: string;
   userId: string;
+  userName?: string;
+  userEmail?: string;
   items: OrderItem[];
   total: number;
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   shippingAddress: string;
   paymentMethod: string;
   createdAt: string;
@@ -58,20 +60,18 @@ export interface OrderItem {
   sellerId: string;
 }
 
-// Props pour les composants
-export interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onContinue: () => void;
-}
-
-export interface ProductCardProps {
-  product: Product;
-}
-
-export interface ProductFormProps {
-  onSubmit: (product: Product) => void;
-  initialData?: Partial<Product>;
+export interface Stats {
+  productsCount: number;
+  ordersCount: number;
+  pendingProducts: number;
+  totalSales: number;
+  pendingOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
+  shippedOrders: number;
+  totalUsers: number;
+  totalProducers: number;
+  totalClients: number;
 }
 
 export interface AuthContextType {

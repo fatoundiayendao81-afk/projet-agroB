@@ -24,7 +24,7 @@
       "address": "123 Rue de l'Agriculture, Paris",
       "blocked": false,
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastLogin": "2025-10-11T15:56:27.492Z"
+      "lastLogin": "2025-10-13T12:21:52.079Z"
     },
     {
       "id": "2",
@@ -38,7 +38,7 @@
       "description": "Producteur bio depuis 15 ans",
       "blocked": false,
       "createdAt": "2024-01-02T00:00:00.000Z",
-      "lastLogin": "2025-10-08T19:02:15.361Z"
+      "lastLogin": "2025-10-13T12:16:20.912Z"
     },
     {
       "id": "3",
@@ -79,32 +79,16 @@
       "lastLogin": "2025-10-08T19:23:30.879Z"
     },
     {
-      "id": "0eae",
+      "id": "6",
+      "name": "Abdoul Salam DIALLO",
       "email": "abdoulsalam142@gmail.com",
       "password": "12345678",
-      "name": "Abdoul Salam DIALLO",
       "role": "client",
       "phone": "+221781209169",
-      "address": "ziguinchor",
-      "farmName": "",
-      "description": "",
+      "address": "Ziguinchor, Sénégal",
       "blocked": false,
       "createdAt": "2025-10-08T19:36:41.426Z",
-      "lastLogin": null
-    },
-    {
-      "id": "1760052595057",
-      "email": "abdoulsalamd742@gmail.com",
-      "password": "12345678",
-      "name": "Abdoul Salam DIALLO",
-      "role": "client",
-      "phone": "+221781209169",
-      "address": "ziguinchor",
-      "farmName": "",
-      "description": "",
-      "blocked": false,
-      "createdAt": "2025-10-09T23:29:55.057Z",
-      "lastLogin": "2025-10-11T15:07:39.072Z"
+      "lastLogin": "2025-10-13T12:15:03.262Z"
     }
   ],
   "products": [
@@ -114,13 +98,14 @@
       "description": "Tomates biologiques cultivées en plein air, riches en goût et sans pesticides",
       "price": 3.5,
       "category": "légumes",
-      "image": "https://tse4.mm.bing.net/th/id/OIP.88xv0mrUzehsKXKorZxfVgHaFj?rs=1&pid=ImgDetMain&o=7&rm=3",
+      "image": "https://images.unsplash.com/photo-1546470427-e212d7f5b12f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
       "sellerId": "2",
       "sellerName": "Jean Dupont",
       "farmName": "Ferme de la Vallée",
       "unit": "kg",
       "available": true,
       "stock": 50,
+      "status": "approved",
       "createdAt": "2024-01-15T00:00:00.000Z"
     },
     {
@@ -136,6 +121,7 @@
       "unit": "kg",
       "available": true,
       "stock": 30,
+      "status": "approved",
       "createdAt": "2024-01-16T00:00:00.000Z"
     },
     {
@@ -151,6 +137,7 @@
       "unit": "kg",
       "available": true,
       "stock": 100,
+      "status": "approved",
       "createdAt": "2024-01-17T00:00:00.000Z"
     },
     {
@@ -159,13 +146,14 @@
       "description": "Carottes croquantes cultivées sans engrais chimiques, idéales pour les jus et les plats mijotés",
       "price": 2.2,
       "category": "légumes",
-      "image": "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&w=500&q=80",
-      "sellerId": "4",
-      "sellerName": "Aïssatou Ndiaye",
-      "farmName": "Jardin de Thiès",
+      "image": "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+      "sellerId": "2",
+      "sellerName": "Jean Dupont",
+      "farmName": "Ferme de la Vallée",
       "unit": "kg",
       "available": true,
       "stock": 40,
+      "status": "approved",
       "createdAt": "2024-01-18T00:00:00.000Z"
     },
     {
@@ -174,13 +162,14 @@
       "description": "Poivrons rouges juteux, cultivés en permaculture, riches en vitamine C",
       "price": 3,
       "category": "légumes",
-      "image": "https://tse3.mm.bing.net/th/id/OIP.iDFca2-p0-ClwEupct0MTQHaHa?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3",
-      "sellerId": "4",
-      "sellerName": "Aïssatou Ndiaye",
-      "farmName": "Jardin de Thiès",
+      "image": "https://images.unsplash.com/photo-1621944190312-e1c6359836c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+      "sellerId": "2",
+      "sellerName": "Jean Dupont",
+      "farmName": "Ferme de la Vallée",
       "unit": "kg",
       "available": true,
       "stock": 25,
+      "status": "approved",
       "createdAt": "2024-01-19T00:00:00.000Z"
     },
     {
@@ -189,13 +178,14 @@
       "description": "Mangues sucrées et parfumées, récoltées à maturité dans les vergers de Casamance",
       "price": 2.5,
       "category": "fruits",
-      "image": "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?auto=format&fit=crop&w=500&q=80",
-      "sellerId": "5",
-      "sellerName": "Mamadou Sarr",
-      "farmName": "Verger Sarr",
+      "image": "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+      "sellerId": "3",
+      "sellerName": "Marie Lambert",
+      "farmName": "Exploitation Lambert",
       "unit": "kg",
       "available": true,
       "stock": 60,
+      "status": "approved",
       "createdAt": "2024-01-20T00:00:00.000Z"
     },
     {
@@ -204,13 +194,14 @@
       "description": "Bananes mûres et douces, cultivées sans traitement chimique",
       "price": 2,
       "category": "fruits",
-      "image": "https://c8.alamy.com/compfr/2jywttf/gaziantep-turquie-31st-aout-2022-gaziantep-turquie-31-aout-2022-un-bouquet-de-bananes-mures-cultivees-en-turquie-credit-image-zakariya-yahya-imageslive-via-zuma-press-wire-2jywttf.jpg",
-      "sellerId": "5",
-      "sellerName": "Mamadou Sarr",
-      "farmName": "Verger Sarr",
+      "image": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+      "sellerId": "3",
+      "sellerName": "Marie Lambert",
+      "farmName": "Exploitation Lambert",
       "unit": "kg",
       "available": true,
       "stock": 45,
+      "status": "approved",
       "createdAt": "2024-01-21T00:00:00.000Z"
     },
     {
@@ -219,13 +210,14 @@
       "description": "Mil local non transformé, idéal pour les bouillies et couscous traditionnels",
       "price": 1,
       "category": "grains",
-      "image": "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&w=500&q=80",
-      "sellerId": "6",
-      "sellerName": "Fatou Diop",
-      "farmName": "Terres de Diop",
+      "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+      "sellerId": "3",
+      "sellerName": "Marie Lambert",
+      "farmName": "Exploitation Lambert",
       "unit": "kg",
       "available": true,
       "stock": 80,
+      "status": "approved",
       "createdAt": "2024-01-22T00:00:00.000Z"
     },
     {
@@ -234,14 +226,111 @@
       "description": "Maïs séché, parfait pour la transformation en farine ou la cuisson traditionnelle",
       "price": 1.3,
       "category": "grains",
-      "image": "https://tse4.mm.bing.net/th/id/OIP.dC0QbKWfOSLwNyqtp_Xo3QHaE8?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3",
-      "sellerId": "6",
-      "sellerName": "Fatou Diop",
-      "farmName": "Terres de Diop",
+      "image": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+      "sellerId": "3",
+      "sellerName": "Marie Lambert",
+      "farmName": "Exploitation Lambert",
       "unit": "kg",
       "available": true,
       "stock": 90,
+      "status": "approved",
       "createdAt": "2024-01-23T00:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "1",
+      "userId": "4",
+      "userName": "Pierre Martin",
+      "userEmail": "pierre.martin@email.com",
+      "items": [
+        {
+          "productId": "1",
+          "productName": "Tomates bio",
+          "quantity": 2,
+          "price": 3.5,
+          "sellerId": "2"
+        },
+        {
+          "productId": "2",
+          "productName": "Pommes Golden",
+          "quantity": 1,
+          "price": 2.8,
+          "sellerId": "2"
+        }
+      ],
+      "total": 9.8,
+      "status": "processing",
+      "shippingAddress": "15 Avenue des Champs, 75008 Paris",
+      "paymentMethod": "card",
+      "orderNumber": "CMD-20240001",
+      "createdAt": "2024-10-01T10:00:00.000Z",
+      "updatedAt": "2025-10-13T12:00:30.381Z"
+    },
+    {
+      "id": "2",
+      "userId": "5",
+      "userName": "Sophie Durand",
+      "userEmail": "sophie.durand@email.com",
+      "items": [
+        {
+          "productId": "3",
+          "productName": "Blé entier",
+          "quantity": 5,
+          "price": 1.2,
+          "sellerId": "3"
+        },
+        {
+          "productId": "6",
+          "productName": "Mangues locales",
+          "quantity": 2,
+          "price": 2.5,
+          "sellerId": "3"
+        }
+      ],
+      "total": 11,
+      "status": "shipped",
+      "shippingAddress": "25 Rue des Fleurs, 75008 Paris",
+      "paymentMethod": "card",
+      "orderNumber": "CMD-20240002",
+      "createdAt": "2024-10-05T14:30:00.000Z",
+      "updatedAt": "2024-10-06T09:15:00.000Z"
+    },
+    {
+      "id": "3",
+      "userId": "6",
+      "userName": "Abdoul Salam DIALLO",
+      "userEmail": "abdoulsalam142@gmail.com",
+      "items": [
+        {
+          "productId": "1",
+          "productName": "Tomates bio",
+          "quantity": 3,
+          "price": 3.5,
+          "sellerId": "2"
+        },
+        {
+          "productId": "4",
+          "productName": "Carottes fraîches",
+          "quantity": 2,
+          "price": 2.2,
+          "sellerId": "2"
+        },
+        {
+          "productId": "7",
+          "productName": "Bananes douces",
+          "quantity": 4,
+          "price": 2,
+          "sellerId": "3"
+        }
+      ],
+      "total": 24.9,
+      "status": "pending",
+      "shippingAddress": "Ziguinchor, Sénégal",
+      "paymentMethod": "cash",
+      "orderNumber": "CMD-20240003",
+      "createdAt": "2024-10-10T08:45:00.000Z",
+      "updatedAt": "2024-10-10T08:45:00.000Z"
     }
   ]
 }

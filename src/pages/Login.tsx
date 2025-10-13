@@ -95,7 +95,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const testAccounts = [
+  const testAccounts: (User & { farmName?: string })[] = [
     {
       id: "1",
       name: "Admin AgriEcom",
@@ -106,6 +106,20 @@ const Login: React.FC = () => {
       address: "123 Rue de l'Agriculture, Paris",
       blocked: false,
       createdAt: "2024-01-01T00:00:00.000Z",
+      // farmName is not needed for admin
+    },
+    // Exemple d'ajout d'un producteur avec farmName
+    {
+      id: "2",
+      name: "Jean Producteur",
+      email: "jean@ferme.com",
+      password: "producteur123",
+      role: "producer" as User["role"],
+      phone: "+33 6 12 34 56 78",
+      address: "456 Chemin de la Ferme, Lyon",
+      blocked: false,
+      createdAt: "2024-02-01T00:00:00.000Z",
+      farmName: "Ferme du Soleil",
     },
     // ... autres comptes de test
   ];

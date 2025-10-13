@@ -2,10 +2,10 @@ import type { Order, OrderItem } from "../types";
 
 const API_URL = "http://localhost:5000/orders";
 
-const fetchAPI = async (
+const fetchAPI = async <T>(
   url: string,
   options: RequestInit = {}
-): Promise<any> => {
+): Promise<T> => {
   const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
@@ -32,7 +32,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
 
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
   try {
-    const orders = await fetchAPI(API_URL);
+    const orders = await fetchAPI<Order[]>(API_URL);
     return orders.filter((order: Order) => order.userId === userId);
   } catch (error) {
     console.error(
@@ -47,7 +47,7 @@ export const getProducerOrders = async (
   producerId: string
 ): Promise<Order[]> => {
   try {
-    const orders = await fetchAPI(API_URL);
+    const orders = await fetchAPI<Order[]>(API_URL);
     return orders.filter((order: Order) =>
       order.items.some((item: OrderItem) => item.sellerId === producerId)
     );
@@ -218,7 +218,7 @@ export const getGlobalStats = async (): Promise<GlobalStats> => {
       pendingOrders: orders.filter((order: Order) => order.status === "pending")
         .length,
       confirmedOrders: orders.filter(
-        (order: Order) => order.status === "confirmed"
+        (order: Order) => order.status === "processing"
       ).length,
       shippedOrders: orders.filter((order: Order) => order.status === "shipped")
         .length,

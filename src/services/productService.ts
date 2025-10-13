@@ -1,3 +1,4 @@
+// services/productService.ts
 import type { Product } from "../types";
 
 const API_URL = "http://localhost:5000/products";
@@ -29,6 +30,7 @@ export const productService = {
       body: JSON.stringify({
         ...productData,
         createdAt: new Date().toISOString(),
+        status: "pending",
       }),
     });
     if (!response.ok) throw new Error("Erreur lors de l'ajout du produit");
@@ -45,6 +47,20 @@ export const productService = {
       body: JSON.stringify(productData),
     });
     if (!response.ok) throw new Error("Erreur lors de la mise à jour");
+    return response.json();
+  },
+
+  updateProductStatus: async (
+    productId: string,
+    status: string
+  ): Promise<Product> => {
+    const response = await fetch(`${API_URL}/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok)
+      throw new Error("Erreur lors de la mise à jour du statut");
     return response.json();
   },
 
@@ -69,5 +85,12 @@ export const productService = {
       const matchCategory = !category || p.category === category;
       return matchQuery && matchCategory;
     });
+  },
+
+  getPendingProducts: async (): Promise<Product[]> => {
+    const response = await fetch(`${API_URL}?status=pending`);
+    if (!response.ok)
+      throw new Error("Erreur lors du chargement des produits en attente");
+    return response.json();
   },
 };
