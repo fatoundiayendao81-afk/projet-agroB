@@ -12,6 +12,8 @@ import Livraison from "../components/Livraison";
 import Payment from "../components/Payment";
 import Confirmation from "../components/Confirmation";
 import About from "../pages/About";
+import AddProductForm from "../pages/AddProductForm";
+
 
 const AppRoutes: React.FC = () => {
   return (
@@ -28,6 +30,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/paiement" element={<Payment />} />
       <Route path="/confirmation" element={<Confirmation />} />
       <Route path="/about" element={<About />} />
+      <Route path="/add-product" element={<AddProductForm />} />
     </Routes>
   );
 };
