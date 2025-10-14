@@ -1,4 +1,5 @@
-import type { Order, OrderItem } from "../types";
+import type { Order, OrderItem, OrderApproval } from "../types";
+import { approvalService } from "./approvalService";
 
 const API_URL = "http://localhost:5000/orders";
 
@@ -22,74 +23,158 @@ const fetchAPI = async <T>(
 };
 
 export const getAllOrders = async (): Promise<Order[]> => {
-  try {
-    return await fetchAPI(API_URL);
-  } catch (error) {
-    console.error("❌ Erreur lors de la récupération des commandes:", error);
-    throw error;
-  }
+  return await fetchAPI<Order[]>(API_URL);
 };
 
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
-  try {
-    const orders = await fetchAPI<Order[]>(API_URL);
-    return orders.filter((order: Order) => order.userId === userId);
-  } catch (error) {
-    console.error(
-      "❌ Erreur lors de la récupération des commandes utilisateur:",
-      error
-    );
-    throw error;
-  }
+  const orders = await fetchAPI<Order[]>(API_URL);
+  return orders.filter((order: Order) => order.userId === userId);
 };
 
 export const getProducerOrders = async (
   producerId: string
 ): Promise<Order[]> => {
-  try {
-    const orders = await fetchAPI<Order[]>(API_URL);
-    return orders.filter((order: Order) =>
-      order.items.some((item: OrderItem) => item.sellerId === producerId)
-    );
-  } catch (error) {
-    console.error(
-      "❌ Erreur lors de la récupération des commandes producteur:",
-      error
-    );
-    throw error;
-  }
+  const orders = await fetchAPI<Order[]>(API_URL);
+  return orders.filter((order: Order) =>
+    order.items.some((item: OrderItem) => item.sellerId === producerId)
+  );
 };
 
 export const getOrderById = async (orderId: string): Promise<Order> => {
-  try {
-    return await fetchAPI(`${API_URL}/${orderId}`);
-  } catch (error) {
-    console.error("❌ Erreur lors de la récupération de la commande:", error);
-    throw error;
-  }
+  return await fetchAPI<Order>(`${API_URL}/${orderId}`);
 };
 
 export const createOrder = async (
   orderData: Partial<Order>
-): Promise<Order> => {
-  try {
-    const newOrder: Order = {
-      ...(orderData as Order),
+): Promise<OrderApproval> => {
+  if (!orderData.userId) {
+    throw new Error("ID utilisateur requis");
+  }
+
+  // Pour les clients, créer une demande d'approbation
+  const approval = await approvalService.createOrderApproval({
+    orderId: `temp-${Date.now()}`,
+    action: "create",
+    orderData: {
+      ...orderData,
       id: Date.now().toString(),
       orderNumber: `CMD-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: "pending",
-    };
+    },
+    clientId: orderData.userId,
+    clientName: orderData.userName,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  });
 
-    return await fetchAPI(API_URL, {
-      method: "POST",
-      body: JSON.stringify(newOrder),
-    });
-  } catch (error) {
-    console.error("❌ Erreur lors de la création de la commande:", error);
-    throw error;
+  return approval;
+};
+
+export const cancelOrder = async (
+  orderId: string,
+  reason: string = "",
+  userId: string
+): Promise<OrderApproval> => {
+  // Récupérer la commande existante
+  const existingOrder = await getOrderById(orderId);
+
+  // Vérifier que l'utilisateur est bien le propriétaire de la commande
+  if (existingOrder.userId !== userId) {
+    throw new Error("Vous n'êtes pas autorisé à annuler cette commande");
   }
+
+  // Pour les clients, créer une demande d'approbation
+  const approval = await approvalService.createOrderApproval({
+    orderId: orderId,
+    action: "cancel",
+    orderData: {
+      cancellationReason: reason,
+      cancelledAt: new Date().toISOString(),
+    },
+    clientId: existingOrder.userId,
+    clientName: existingOrder.userName,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  });
+
+  return approval;
+};
+
+// Méthode pour les admins pour exécuter les actions approuvées
+export const executeOrderAction = async (
+  approval: OrderApproval
+): Promise<Order | boolean> => {
+  switch (approval.action) {
+    case "create": {
+      if (!approval.orderData) {
+        throw new Error("Données de commande manquantes");
+      }
+
+      const orderToCreate = {
+        ...approval.orderData,
+        id: Date.now().toString(),
+        status: "processing" as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderToCreate),
+      });
+
+      if (!response.ok)
+        throw new Error("Erreur lors de la création de la commande");
+      return response.json();
+    }
+
+    case "cancel": {
+      const cancelResponse = await fetch(`${API_URL}/${approval.orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "cancelled",
+          cancellationReason: approval.orderData?.cancellationReason,
+          cancelledAt: approval.orderData?.cancelledAt,
+          updatedAt: new Date().toISOString(),
+        }),
+      });
+
+      if (!cancelResponse.ok)
+        throw new Error("Erreur lors de l'annulation de la commande");
+      return cancelResponse.json();
+    }
+
+    default:
+      throw new Error("Action non supportée");
+  }
+};
+
+// Méthodes directes pour les admins (sans approbation)
+export const adminCreateOrder = async (
+  orderData: Partial<Order>
+): Promise<Order> => {
+  const newOrder: Order = {
+    ...(orderData as Order),
+    id: Date.now().toString(),
+    orderNumber: `CMD-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    status: "processing",
+  };
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newOrder),
+  });
+
+  if (!response.ok)
+    throw new Error("Erreur lors de la création de la commande");
+  return response.json();
 };
 
 export const updateOrderStatus = async (
@@ -97,151 +182,118 @@ export const updateOrderStatus = async (
   status: Order["status"],
   trackingNumber: string | null = null
 ): Promise<Order> => {
-  try {
-    const updateData = {
-      status,
-      updatedAt: new Date().toISOString(),
-      ...(trackingNumber && { trackingNumber }),
-    };
+  const updateData = {
+    status,
+    updatedAt: new Date().toISOString(),
+    ...(trackingNumber && { trackingNumber }),
+  };
 
-    return await fetchAPI(`${API_URL}/${orderId}`, {
-      method: "PATCH",
-      body: JSON.stringify(updateData),
-    });
-  } catch (error) {
-    console.error("❌ Erreur lors de la mise à jour du statut:", error);
-    throw error;
-  }
+  const response = await fetch(`${API_URL}/${orderId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updateData),
+  });
+
+  if (!response.ok) throw new Error("Erreur lors de la mise à jour du statut");
+  return response.json();
 };
 
-export const cancelOrder = async (
+export const adminCancelOrder = async (
   orderId: string,
   reason: string = ""
 ): Promise<Order> => {
-  try {
-    const updateData = {
-      status: "cancelled",
-      cancellationReason: reason,
-      cancelledAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  const updateData = {
+    status: "cancelled",
+    cancellationReason: reason,
+    cancelledAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 
-    return await fetchAPI(`${API_URL}/${orderId}`, {
-      method: "PATCH",
-      body: JSON.stringify(updateData),
-    });
-  } catch (error) {
-    console.error("❌ Erreur lors de l'annulation de la commande:", error);
-    throw error;
-  }
+  const response = await fetch(`${API_URL}/${orderId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updateData),
+  });
+
+  if (!response.ok)
+    throw new Error("Erreur lors de l'annulation de la commande");
+  return response.json();
 };
 
 export const deleteOrder = async (orderId: string): Promise<boolean> => {
-  try {
-    await fetchAPI(`${API_URL}/${orderId}`, {
-      method: "DELETE",
-    });
-    return true;
-  } catch (error) {
-    console.error("❌ Erreur lors de la suppression de la commande:", error);
-    throw error;
-  }
+  const response = await fetch(`${API_URL}/${orderId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok)
+    throw new Error("Erreur lors de la suppression de la commande");
+  return true;
 };
 
-interface ProducerStats {
-  totalOrders: number;
-  totalRevenue: number;
-  pendingOrders: number;
-  deliveredOrders: number;
-  cancelledOrders: number;
-}
+// Autres méthodes existantes...
+export const getProducerStats = async (producerId: string) => {
+  const orders = await getProducerOrders(producerId);
 
-export const getProducerStats = async (
-  producerId: string
-): Promise<ProducerStats> => {
-  try {
-    const orders = await getProducerOrders(producerId);
+  const stats = {
+    totalOrders: orders.length,
+    totalRevenue: orders.reduce((sum: number, order: Order) => {
+      const producerItems = order.items.filter(
+        (item: OrderItem) => item.sellerId === producerId
+      );
+      return (
+        sum +
+        producerItems.reduce(
+          (itemSum: number, item: OrderItem) =>
+            itemSum + item.price * item.quantity,
+          0
+        )
+      );
+    }, 0),
+    pendingOrders: orders.filter((order: Order) => order.status === "pending")
+      .length,
+    deliveredOrders: orders.filter(
+      (order: Order) => order.status === "delivered"
+    ).length,
+    cancelledOrders: orders.filter(
+      (order: Order) => order.status === "cancelled"
+    ).length,
+  };
 
-    const stats: ProducerStats = {
-      totalOrders: orders.length,
-      totalRevenue: orders.reduce((sum: number, order: Order) => {
-        const producerItems = order.items.filter(
-          (item: OrderItem) => item.sellerId === producerId
-        );
-        return (
-          sum +
-          producerItems.reduce(
-            (itemSum: number, item: OrderItem) =>
-              itemSum + item.price * item.quantity,
+  return stats;
+};
+
+export const getGlobalStats = async () => {
+  const orders = await getAllOrders();
+
+  const stats = {
+    totalOrders: orders.length,
+    totalRevenue: orders.reduce(
+      (sum: number, order: Order) => sum + (order.total || 0),
+      0
+    ),
+    pendingOrders: orders.filter((order: Order) => order.status === "pending")
+      .length,
+    confirmedOrders: orders.filter(
+      (order: Order) => order.status === "processing"
+    ).length,
+    shippedOrders: orders.filter((order: Order) => order.status === "shipped")
+      .length,
+    deliveredOrders: orders.filter(
+      (order: Order) => order.status === "delivered"
+    ).length,
+    cancelledOrders: orders.filter(
+      (order: Order) => order.status === "cancelled"
+    ).length,
+    averageOrderValue:
+      orders.length > 0
+        ? orders.reduce(
+            (sum: number, order: Order) => sum + (order.total || 0),
             0
-          )
-        );
-      }, 0),
-      pendingOrders: orders.filter((order: Order) => order.status === "pending")
-        .length,
-      deliveredOrders: orders.filter(
-        (order: Order) => order.status === "delivered"
-      ).length,
-      cancelledOrders: orders.filter(
-        (order: Order) => order.status === "cancelled"
-      ).length,
-    };
+          ) / orders.length
+        : 0,
+  };
 
-    return stats;
-  } catch (error) {
-    console.error("❌ Erreur lors du calcul des statistiques:", error);
-    throw error;
-  }
-};
-
-interface GlobalStats {
-  totalOrders: number;
-  totalRevenue: number;
-  pendingOrders: number;
-  confirmedOrders: number;
-  shippedOrders: number;
-  deliveredOrders: number;
-  cancelledOrders: number;
-  averageOrderValue: number;
-}
-
-export const getGlobalStats = async (): Promise<GlobalStats> => {
-  try {
-    const orders = await getAllOrders();
-
-    const stats: GlobalStats = {
-      totalOrders: orders.length,
-      totalRevenue: orders.reduce(
-        (sum: number, order: Order) => sum + (order.total || 0),
-        0
-      ),
-      pendingOrders: orders.filter((order: Order) => order.status === "pending")
-        .length,
-      confirmedOrders: orders.filter(
-        (order: Order) => order.status === "processing"
-      ).length,
-      shippedOrders: orders.filter((order: Order) => order.status === "shipped")
-        .length,
-      deliveredOrders: orders.filter(
-        (order: Order) => order.status === "delivered"
-      ).length,
-      cancelledOrders: orders.filter(
-        (order: Order) => order.status === "cancelled"
-      ).length,
-      averageOrderValue:
-        orders.length > 0
-          ? orders.reduce(
-              (sum: number, order: Order) => sum + (order.total || 0),
-              0
-            ) / orders.length
-          : 0,
-    };
-
-    return stats;
-  } catch (error) {
-    console.error("❌ Erreur lors du calcul des statistiques globales:", error);
-    throw error;
-  }
+  return stats;
 };
 
 interface OrderFilters {
@@ -255,45 +307,40 @@ interface OrderFilters {
 export const searchOrders = async (
   filters: OrderFilters = {}
 ): Promise<Order[]> => {
-  try {
-    const orders = await getAllOrders();
+  const orders = await getAllOrders();
 
-    return orders.filter((order: Order) => {
-      if (filters.status && order.status !== filters.status) {
-        return false;
-      }
+  return orders.filter((order: Order) => {
+    if (filters.status && order.status !== filters.status) {
+      return false;
+    }
 
-      if (
-        filters.startDate &&
-        new Date(order.createdAt) < new Date(filters.startDate)
-      ) {
-        return false;
-      }
+    if (
+      filters.startDate &&
+      new Date(order.createdAt) < new Date(filters.startDate)
+    ) {
+      return false;
+    }
 
-      if (
-        filters.endDate &&
-        new Date(order.createdAt) > new Date(filters.endDate)
-      ) {
-        return false;
-      }
+    if (
+      filters.endDate &&
+      new Date(order.createdAt) > new Date(filters.endDate)
+    ) {
+      return false;
+    }
 
-      if (
-        filters.orderNumber &&
-        !order.orderNumber.includes(filters.orderNumber)
-      ) {
-        return false;
-      }
+    if (
+      filters.orderNumber &&
+      !order.orderNumber.includes(filters.orderNumber)
+    ) {
+      return false;
+    }
 
-      if (filters.userId && order.userId !== filters.userId) {
-        return false;
-      }
+    if (filters.userId && order.userId !== filters.userId) {
+      return false;
+    }
 
-      return true;
-    });
-  } catch (error) {
-    console.error("❌ Erreur lors de la recherche des commandes:", error);
-    throw error;
-  }
+    return true;
+  });
 };
 
 export const validateOrderData = (orderData: Partial<Order>): string[] => {
@@ -333,22 +380,17 @@ export const validateOrderData = (orderData: Partial<Order>): string[] => {
 };
 
 export const checkStock = async (items: OrderItem[]): Promise<string[]> => {
-  try {
-    const stockErrors: string[] = [];
+  const stockErrors: string[] = [];
 
-    for (const item of items) {
-      if (item.quantity > 10) {
-        stockErrors.push(
-          `Stock insuffisant pour le produit: ${item.productName}`
-        );
-      }
+  for (const item of items) {
+    if (item.quantity > 10) {
+      stockErrors.push(
+        `Stock insuffisant pour le produit: ${item.productName}`
+      );
     }
-
-    return stockErrors;
-  } catch (error) {
-    console.error("❌ Erreur lors de la vérification du stock:", error);
-    throw error;
   }
+
+  return stockErrors;
 };
 
 const orderService = {
@@ -360,6 +402,9 @@ const orderService = {
   updateOrderStatus,
   cancelOrder,
   deleteOrder,
+  executeOrderAction,
+  adminCreateOrder,
+  adminCancelOrder,
   getProducerStats,
   getGlobalStats,
   searchOrders,

@@ -1,4 +1,3 @@
-// types/index.ts
 export interface User {
   id: string;
   name: string;
@@ -28,6 +27,7 @@ export interface Product {
   available: boolean;
   stock: number;
   createdAt: string;
+  updatedAt?: string;
   status?: "pending" | "approved" | "rejected";
 }
 
@@ -45,6 +45,8 @@ export interface Order {
   total: number;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   shippingAddress: string;
+  cancellationReason?: string;
+  cancelledAt?: string;
   paymentMethod: string;
   createdAt: string;
   updatedAt: string;
@@ -103,4 +105,39 @@ export interface CartContextType {
   clearCart: () => void;
   getCartTotal: () => number;
   getCartItemsCount: () => number;
+}
+
+// Nouvelles interfaces pour le système d'approbation
+export interface ProductApproval {
+  id: string;
+  productId: string;
+  action: "create" | "update" | "delete";
+  productData?: Partial<Product>;
+  status: "pending" | "approved" | "rejected";
+  producerId: string;
+  producerName?: string;
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewComment?: string;
+}
+
+export interface OrderApproval {
+  id: string;
+  orderId: string;
+  action: "create" | "update" | "cancel";
+  orderData?: Partial<Order>;
+  status: "pending" | "approved" | "rejected";
+  clientId: string;
+  clientName?: string;
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewComment?: string;
+}
+
+export interface ApprovalStats {
+  pendingProductApprovals: number;
+  pendingOrderApprovals: number;
+  totalApprovals: number;
 }

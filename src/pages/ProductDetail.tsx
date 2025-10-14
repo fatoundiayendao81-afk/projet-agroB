@@ -194,7 +194,7 @@ const ProductDetail: React.FC = () => {
               alt={product.title}
               className="w-full h-96 object-cover rounded-xl"
               onError={(e) => {
-                e.target.src =
+                (e.target as HTMLImageElement).src =
                   "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=80";
               }}
             />

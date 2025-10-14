@@ -4,7 +4,16 @@ import { useAuth } from "../context/AuthContext";
 import { productService } from "../services/productService";
 import orderService from "../services/orderService";
 import userService from "../services/userService";
-import type { Product, Order, User } from "../types";
+import approvalService from "../services/approvalService";
+import type {
+  Product,
+  Order,
+  User,
+  ProductApproval,
+  OrderApproval,
+  Stats,
+} from "../types";
+// Ajoutez ces imports si ce n'est pas déjà fait
 import {
   Package,
   ShoppingCart,
@@ -20,7 +29,9 @@ import {
   UserCheck,
   AlertTriangle,
   Loader,
+  FileCheck, // Ajoutez celui-ci si manquant
 } from "lucide-react";
+import ApprovalsTab from "../components/ApprovalsTab";
 
 interface ProfileForm {
   name: string;
@@ -31,21 +42,16 @@ interface ProfileForm {
   description: string;
 }
 
-interface Stats {
-  productsCount: number;
-  ordersCount: number;
-  pendingProducts: number;
-  totalSales: number;
-  pendingOrders: number;
-  completedOrders: number;
-  cancelledOrders: number;
-  shippedOrders: number;
-  totalUsers: number;
-  totalProducers: number;
-  totalClients: number;
+interface ExtendedStats extends Stats {
+  pendingProductApprovals: number;
+  pendingOrderApprovals: number;
+  myPendingApprovals: number;
 }
 
 const Profile: React.FC = () => {
+  // Ajoutez cette fonction si ce n'est pas déjà fait
+  // (Supprimé car doublon plus bas)
+
   const { currentUser, updateProfile, isClient, isProducer, isAdmin } =
     useAuth();
 
@@ -71,9 +77,13 @@ const Profile: React.FC = () => {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [myProductApprovals, setMyProductApprovals] = useState<
+    ProductApproval[]
+  >([]);
+  const [myOrderApprovals, setMyOrderApprovals] = useState<OrderApproval[]>([]);
   const [activeTab, setActiveTab] = useState<string>("overview");
 
-  const [stats, setStats] = useState<Stats>({
+  const [stats, setStats] = useState<ExtendedStats>({
     productsCount: 0,
     ordersCount: 0,
     pendingProducts: 0,
@@ -85,6 +95,9 @@ const Profile: React.FC = () => {
     totalUsers: 0,
     totalProducers: 0,
     totalClients: 0,
+    pendingProductApprovals: 0,
+    pendingOrderApprovals: 0,
+    myPendingApprovals: 0,
   });
 
   useEffect(() => {
@@ -105,27 +118,43 @@ const Profile: React.FC = () => {
   const loadRoleSpecificData = async (): Promise<void> => {
     try {
       setDataLoading(true);
+
       if (isClient() && currentUser) {
-        const orders = await orderService.getUserOrders(currentUser.id);
+        const [orders, orderApprovals] = await Promise.all([
+          orderService.getUserOrders(currentUser.id),
+          approvalService.getClientOrderApprovals(currentUser.id),
+        ]);
         setUserOrders(orders || []);
-        calculateClientStats(orders || []);
+        setMyOrderApprovals(orderApprovals || []);
+        calculateClientStats(orders || [], orderApprovals || []);
       } else if (isProducer() && currentUser) {
-        const products = await productService.getUserProducts(currentUser.id);
+        const [products, productApprovals] = await Promise.all([
+          productService.getUserProducts(currentUser.id),
+          approvalService.getProducerProductApprovals(currentUser.id),
+        ]);
         setUserProducts(products || []);
-        calculateProducerStats(products || []);
+        setMyProductApprovals(productApprovals || []);
+        calculateProducerStats(products || [], productApprovals || []);
       } else if (isAdmin()) {
-        const [products, orders, users] = await Promise.all([
+        const [products, orders, users, approvalStats] = await Promise.all([
           productService.getProducts(),
           orderService.getAllOrders(),
           userService.getAllUsers(),
+          approvalService.getApprovalStats(),
         ]);
 
         setAllProducts(products || []);
         setAllOrders(orders || []);
         setAllUsers(users || []);
-        calculateAdminStats(products || [], orders || [], users || []);
+        calculateAdminStats(
+          products || [],
+          orders || [],
+          users || [],
+          approvalStats
+        );
       }
-    } catch {
+    } catch (error) {
+      console.error("Erreur lors du chargement des données:", error);
       setMessage({
         type: "error",
         text: "Erreur lors du chargement des données",
@@ -135,7 +164,10 @@ const Profile: React.FC = () => {
     }
   };
 
-  const calculateClientStats = (orders: Order[]): void => {
+  const calculateClientStats = (
+    orders: Order[],
+    orderApprovals: OrderApproval[]
+  ): void => {
     const ordersCount = orders.length;
     const pendingOrders = orders.filter((o) => o.status === "pending").length;
     const completedOrders = orders.filter(
@@ -149,6 +181,10 @@ const Profile: React.FC = () => {
       .filter((o) => o.status === "delivered")
       .reduce((sum, order) => sum + (order.total || 0), 0);
 
+    const myPendingApprovals = orderApprovals.filter(
+      (a) => a.status === "pending"
+    ).length;
+
     setStats((prev) => ({
       ...prev,
       ordersCount,
@@ -157,10 +193,14 @@ const Profile: React.FC = () => {
       cancelledOrders,
       shippedOrders,
       totalSales,
+      myPendingApprovals,
     }));
   };
 
-  const calculateProducerStats = (products: Product[]): void => {
+  const calculateProducerStats = (
+    products: Product[],
+    productApprovals: ProductApproval[]
+  ): void => {
     const productsCount = products.length;
     const pendingProducts = products.filter(
       (p) => p.status === "pending"
@@ -169,18 +209,30 @@ const Profile: React.FC = () => {
       (p) => p.status === "approved"
     ).length;
 
+    const myPendingApprovals = productApprovals.filter(
+      (a) => a.status === "pending"
+    ).length;
+
     setStats((prev) => ({
       ...prev,
       productsCount,
       pendingProducts,
       completedOrders: approvedProducts,
+      myPendingApprovals,
     }));
   };
+
+  interface ApprovalStats {
+    pendingProductApprovals: number;
+    pendingOrderApprovals: number;
+    totalApprovals: number;
+  }
 
   const calculateAdminStats = (
     products: Product[],
     orders: Order[],
-    users: User[]
+    users: User[],
+    approvalStats: ApprovalStats
   ): void => {
     const productsCount = products.length;
     const pendingProducts = products.filter(
@@ -215,6 +267,9 @@ const Profile: React.FC = () => {
       totalUsers,
       totalProducers,
       totalClients,
+      pendingProductApprovals: approvalStats.pendingProductApprovals,
+      pendingOrderApprovals: approvalStats.pendingOrderApprovals,
+      myPendingApprovals: approvalStats.totalApprovals,
     });
   };
 
@@ -270,20 +325,49 @@ const Profile: React.FC = () => {
     setMessage({ type: "", text: "" });
   };
 
-  const handleAddProduct = (): void => {
-    window.location.href = "/add-product";
+  const handleAddProduct = async (): Promise<void> => {
+    if (isProducer() && currentUser) {
+      // Rediriger vers la page d'ajout de produit
+      window.location.href = "/add-product";
+    } else if (isAdmin()) {
+      window.location.href = "/add-product";
+    }
   };
 
   const handleEditProduct = (productId: string): void => {
-    window.location.href = `/edit-product/${productId}`;
+    if (isProducer() && currentUser) {
+      // Pour les producteurs, la modification passe par le système d'approbation
+      window.location.href = `/edit-product/${productId}`;
+    } else if (isAdmin()) {
+      // Les admins peuvent modifier directement
+      window.location.href = `/edit-product/${productId}`;
+    }
   };
 
   const handleDeleteProduct = async (productId: string): Promise<void> => {
+    if (!currentUser) return;
+
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
       try {
-        await productService.deleteProduct(productId);
-        setMessage({ type: "success", text: "Produit supprimé avec succès !" });
-        loadRoleSpecificData();
+        if (isProducer()) {
+          // Pour les producteurs, créer une demande d'approbation
+          const approval = await productService.deleteProduct(productId);
+          // Use the approval variable here
+          console.log(approval);
+          setMessage({
+            type: "success",
+            text: "Demande de suppression soumise pour approbation",
+          });
+          loadRoleSpecificData();
+        } else if (isAdmin()) {
+          // Les admins peuvent supprimer directement
+          await productService.adminDeleteProduct(productId);
+          setMessage({
+            type: "success",
+            text: "Produit supprimé avec succès !",
+          });
+          loadRoleSpecificData();
+        }
       } catch (error) {
         setMessage({
           type: "error",
@@ -325,17 +409,37 @@ const Profile: React.FC = () => {
     orderId: string,
     status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
   ): Promise<void> => {
+    if (!currentUser) return;
+
     try {
-      await orderService.updateOrderStatus(orderId, status);
-      setMessage({
-        type: "success",
-        text: `Statut de commande mis à jour: ${status}`,
-      });
-      loadRoleSpecificData();
-    } catch {
+      if (status === "cancelled" && isClient()) {
+        // Pour les clients, l'annulation passe par le système d'approbation
+        const approval = await orderService.cancelOrder(
+          orderId,
+          "Annulation demandée par le client",
+          currentUser.id
+        );
+        // Use the approval variable here
+        console.log(approval);
+        setMessage({
+          type: "success",
+          text: "Demande d'annulation soumise pour approbation",
+        });
+        loadRoleSpecificData();
+      } else if (isAdmin()) {
+        // Les admins peuvent modifier directement le statut
+        await orderService.updateOrderStatus(orderId, status);
+        setMessage({
+          type: "success",
+          text: `Statut de commande mis à jour: ${status}`,
+        });
+        loadRoleSpecificData();
+      }
+    } catch (error) {
       setMessage({
         type: "error",
-        text: "Erreur lors de la mise à jour du statut",
+        text:
+          (error as Error).message || "Erreur lors de la mise à jour du statut",
       });
     }
   };
@@ -384,6 +488,32 @@ const Profile: React.FC = () => {
         return "Rejeté";
       default:
         return status;
+    }
+  };
+
+  const getApprovalStatusText = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "En attente de validation";
+      case "approved":
+        return "Approuvé";
+      case "rejected":
+        return "Rejeté";
+      default:
+        return status;
+    }
+  };
+
+  const getApprovalStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -451,6 +581,14 @@ const Profile: React.FC = () => {
                   {new Date(currentUser.createdAt).toLocaleDateString("fr-FR")}
                 </span>
               </p>
+
+              {/* Badge pour les approbations en attente */}
+              {(isProducer() || isClient()) && stats.myPendingApprovals > 0 && (
+                <div className="mt-2 inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                  <Clock size={14} className="mr-1" />
+                  {stats.myPendingApprovals} demande(s) en attente de validation
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -484,6 +622,11 @@ const Profile: React.FC = () => {
                 { id: "profile", label: "Profil", icon: UserCheck },
                 ...(isAdmin()
                   ? [
+                      {
+                        id: "approvals",
+                        label: "Validations",
+                        icon: FileCheck,
+                      },
                       { id: "orders", label: "Commandes", icon: ShoppingCart },
                       { id: "users", label: "Utilisateurs", icon: Users },
                       { id: "products", label: "Produits", icon: Package },
@@ -496,6 +639,11 @@ const Profile: React.FC = () => {
                         label: "Mes Produits",
                         icon: Package,
                       },
+                      {
+                        id: "my-approvals",
+                        label: "Mes Demandes",
+                        icon: FileCheck,
+                      },
                     ]
                   : []),
                 ...(isClient()
@@ -504,6 +652,11 @@ const Profile: React.FC = () => {
                         id: "my-orders",
                         label: "Mes Commandes",
                         icon: ShoppingCart,
+                      },
+                      {
+                        id: "my-approvals",
+                        label: "Mes Demandes",
+                        icon: FileCheck,
                       },
                     ]
                   : []),
@@ -519,6 +672,12 @@ const Profile: React.FC = () => {
                 >
                   <tab.icon size={18} />
                   {tab.label}
+                  {(tab.id === "approvals" || tab.id === "my-approvals") &&
+                    stats.myPendingApprovals > 0 && (
+                      <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {stats.myPendingApprovals}
+                      </span>
+                    )}
                 </button>
               ))}
             </nav>
@@ -535,257 +694,265 @@ const Profile: React.FC = () => {
           </div>
         )}
 
-        {/* ONGLET APERÇU - ADMIN */}
-        {!dataLoading && activeTab === "overview" && isAdmin() && (
+        {/* ONGLET APERÇU */}
+        {!dataLoading && activeTab === "overview" && (
           <div className="space-y-8">
             {/* STATISTIQUES ADMIN */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Utilisateurs
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.totalUsers}
-                    </p>
+            {isAdmin() && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Utilisateurs
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.totalUsers}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <Users className="text-blue-600" size={24} />
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      {stats.totalProducers} producteurs • {stats.totalClients}{" "}
+                      clients
+                    </div>
                   </div>
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Users className="text-blue-600" size={24} />
-                  </div>
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  {stats.totalProducers} producteurs • {stats.totalClients}{" "}
-                  clients
-                </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Produits
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.productsCount}
-                    </p>
+                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Produits
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.productsCount}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-green-100 rounded-lg">
+                        <Package className="text-green-600" size={24} />
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      {stats.pendingProducts} en attente
+                    </div>
                   </div>
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <Package className="text-green-600" size={24} />
-                  </div>
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  {stats.pendingProducts} en attente
-                </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Commandes
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.ordersCount}
-                    </p>
+                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Commandes
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.ordersCount}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 rounded-lg">
+                        <ShoppingCart className="text-purple-600" size={24} />
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      {stats.completedOrders} livrées
+                    </div>
                   </div>
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <ShoppingCart className="text-purple-600" size={24} />
-                  </div>
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  {stats.completedOrders} livrées
-                </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Chiffre d'affaires
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.totalSales.toLocaleString()} FCFA
-                    </p>
-                  </div>
-                  <div className="p-3 bg-orange-100 rounded-lg">
-                    <BarChart3 className="text-orange-600" size={24} />
+                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">
+                          Validations en attente
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.myPendingApprovals}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-orange-100 rounded-lg">
+                        <FileCheck className="text-orange-600" size={24} />
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      {stats.pendingProductApprovals} produits •{" "}
+                      {stats.pendingOrderApprovals} commandes
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* STATUT DES COMMANDES */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                Statut des Commandes
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex justify-center mb-2">
-                    <Clock className="text-yellow-600" size={24} />
-                  </div>
-                  <div className="text-gray-700 font-medium">En attente</div>
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {stats.pendingOrders}
+                {/* STATUT DES COMMANDES */}
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                    Statut des Commandes
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="flex justify-center mb-2">
+                        <Clock className="text-yellow-600" size={24} />
+                      </div>
+                      <div className="text-gray-700 font-medium">
+                        En attente
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {stats.pendingOrders}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex justify-center mb-2">
+                        <Truck className="text-blue-600" size={24} />
+                      </div>
+                      <div className="text-gray-700 font-medium">Expédiées</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {stats.shippedOrders}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex justify-center mb-2">
+                        <CheckCircle className="text-green-600" size={24} />
+                      </div>
+                      <div className="text-gray-700 font-medium">Livrées</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        {stats.completedOrders}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="flex justify-center mb-2">
+                        <XCircle className="text-red-600" size={24} />
+                      </div>
+                      <div className="text-gray-700 font-medium">Annulées</div>
+                      <div className="text-2xl font-bold text-red-600">
+                        {stats.cancelledOrders}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex justify-center mb-2">
-                    <Truck className="text-blue-600" size={24} />
-                  </div>
-                  <div className="text-gray-700 font-medium">Expédiées</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {stats.shippedOrders}
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex justify-center mb-2">
-                    <CheckCircle className="text-green-600" size={24} />
-                  </div>
-                  <div className="text-gray-700 font-medium">Livrées</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {stats.completedOrders}
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-                  <div className="flex justify-center mb-2">
-                    <XCircle className="text-red-600" size={24} />
-                  </div>
-                  <div className="text-gray-700 font-medium">Annulées</div>
-                  <div className="text-2xl font-bold text-red-600">
-                    {stats.cancelledOrders}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+              </>
+            )}
 
-        {/* ONGLET APERÇU - PRODUCTEUR */}
-        {!dataLoading && activeTab === "overview" && isProducer() && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Produits
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.productsCount}
-                    </p>
+            {/* STATISTIQUES PRODUCTEUR */}
+            {isProducer() && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        Produits
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats.productsCount}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-green-100 rounded-lg">
+                      <Package className="text-green-600" size={24} />
+                    </div>
                   </div>
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <Package className="text-green-600" size={24} />
+                  <div className="mt-2 text-xs text-gray-500">
+                    {stats.pendingProducts} en attente d'approbation
                   </div>
                 </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  {stats.pendingProducts} en attente d'approbation
-                </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Produits Approuvés
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.completedOrders}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <CheckCircle className="text-blue-600" size={24} />
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        Produits Approuvés
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats.completedOrders}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <CheckCircle className="text-blue-600" size={24} />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Ventes Total
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.totalSales.toLocaleString()} FCFA
-                    </p>
-                  </div>
-                  <div className="p-3 bg-orange-100 rounded-lg">
-                    <BarChart3 className="text-orange-600" size={24} />
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        Demandes en attente
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats.myPendingApprovals}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-orange-100 rounded-lg">
+                      <FileCheck className="text-orange-600" size={24} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* ONGLET APERÇU - CLIENT */}
-        {!dataLoading && activeTab === "overview" && isClient() && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Commandes
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.ordersCount}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <ShoppingCart className="text-purple-600" size={24} />
+            {/* STATISTIQUES CLIENT */}
+            {isClient() && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        Commandes
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats.ordersCount}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-purple-100 rounded-lg">
+                      <ShoppingCart className="text-purple-600" size={24} />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      En attente
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.pendingOrders}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-yellow-100 rounded-lg">
-                    <Clock className="text-yellow-600" size={24} />
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        En attente
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats.pendingOrders}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-yellow-100 rounded-lg">
+                      <Clock className="text-yellow-600" size={24} />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Livrées</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.completedOrders}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <CheckCircle className="text-green-600" size={24} />
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        Livrées
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats.completedOrders}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-green-100 rounded-lg">
+                      <CheckCircle className="text-green-600" size={24} />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      Dépenses Total
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.totalSales.toLocaleString()} FCFA
-                    </p>
-                  </div>
-                  <div className="p-3 bg-orange-100 rounded-lg">
-                    <BarChart3 className="text-orange-600" size={24} />
+                <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        Demandes en attente
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats.myPendingApprovals}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-orange-100 rounded-lg">
+                      <FileCheck className="text-orange-600" size={24} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -923,13 +1090,174 @@ const Profile: React.FC = () => {
           </div>
         )}
 
+        {/* ONGLET VALIDATIONS - ADMIN */}
+        {!dataLoading && activeTab === "approvals" && isAdmin() && (
+          <ApprovalsTab
+            currentUser={currentUser}
+            onDataUpdate={loadRoleSpecificData}
+          />
+        )}
+
+        {/* ONGLET MES DEMANDES - PRODUCTEUR/CLIENT */}
+        {!dataLoading &&
+          activeTab === "my-approvals" &&
+          (isProducer() || isClient()) && (
+            <div className="bg-white rounded-xl shadow-sm border">
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                  Mes Demandes de Validation
+                </h3>
+
+                {/* Demandes de produits pour les producteurs */}
+                {isProducer() && (
+                  <div className="mb-8">
+                    <h4 className="text-lg font-medium text-gray-700 mb-4 flex items-center gap-2">
+                      <Package size={20} />
+                      Demandes de produits ({myProductApprovals.length})
+                    </h4>
+
+                    {myProductApprovals.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <FileCheck
+                          size={48}
+                          className="mx-auto mb-4 text-gray-300"
+                        />
+                        <p>Aucune demande de produit en attente</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {myProductApprovals.map((approval) => (
+                          <div
+                            key={approval.id}
+                            className="border rounded-lg p-4"
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <h5 className="font-semibold">
+                                  {approval.action === "create" &&
+                                    "Création de produit"}
+                                  {approval.action === "update" &&
+                                    "Modification de produit"}
+                                  {approval.action === "delete" &&
+                                    "Suppression de produit"}
+                                </h5>
+                                {approval.productData && (
+                                  <p className="text-sm text-gray-600">
+                                    Produit: {approval.productData.title}
+                                  </p>
+                                )}
+                                <p className="text-sm text-gray-500">
+                                  Soumis le{" "}
+                                  {new Date(
+                                    approval.createdAt
+                                  ).toLocaleDateString("fr-FR")}
+                                </p>
+                              </div>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getApprovalStatusColor(
+                                  approval.status
+                                )}`}
+                              >
+                                {getApprovalStatusText(approval.status)}
+                              </span>
+                            </div>
+
+                            {approval.reviewComment && (
+                              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Commentaire de l'admin:</strong>{" "}
+                                  {approval.reviewComment}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Demandes de commandes pour les clients */}
+                {isClient() && (
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-700 mb-4 flex items-center gap-2">
+                      <ShoppingCart size={20} />
+                      Demandes de commandes ({myOrderApprovals.length})
+                    </h4>
+
+                    {myOrderApprovals.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <FileCheck
+                          size={48}
+                          className="mx-auto mb-4 text-gray-300"
+                        />
+                        <p>Aucune demande de commande en attente</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {myOrderApprovals.map((approval) => (
+                          <div
+                            key={approval.id}
+                            className="border rounded-lg p-4"
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <h5 className="font-semibold">
+                                  {approval.action === "create" &&
+                                    "Nouvelle commande"}
+                                  {approval.action === "cancel" &&
+                                    "Annulation de commande"}
+                                </h5>
+                                <p className="text-sm text-gray-600">
+                                  Commande: {approval.orderId}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Soumis le{" "}
+                                  {new Date(
+                                    approval.createdAt
+                                  ).toLocaleDateString("fr-FR")}
+                                </p>
+                              </div>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getApprovalStatusColor(
+                                  approval.status
+                                )}`}
+                              >
+                                {getApprovalStatusText(approval.status)}
+                              </span>
+                            </div>
+
+                            {approval.reviewComment && (
+                              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Commentaire de l'admin:</strong>{" "}
+                                  {approval.reviewComment}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        {/* ONGLET COMMANDES - ADMIN */}
         {/* ONGLET COMMANDES - ADMIN */}
         {!dataLoading && activeTab === "orders" && isAdmin() && (
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                Gestion des Commandes
-              </h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Gestion des Commandes
+                </h3>
+                <span className="text-sm text-gray-500">
+                  {allOrders.length} commande(s) • {stats.pendingOrders} en
+                  attente
+                </span>
+              </div>
               {allOrders.length === 0 ? (
                 <div className="text-center py-12">
                   <ShoppingCart
@@ -1014,6 +1342,14 @@ const Profile: React.FC = () => {
                                 <option value="delivered">Livrée</option>
                                 <option value="cancelled">Annulée</option>
                               </select>
+                              <button
+                                onClick={() =>
+                                  (window.location.href = `/order/${order.id}`)
+                                }
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 hover:bg-blue-50 rounded"
+                              >
+                                Détails
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -1030,9 +1366,14 @@ const Profile: React.FC = () => {
         {!dataLoading && activeTab === "users" && isAdmin() && (
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                Gestion des Utilisateurs
-              </h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Gestion des Utilisateurs
+                </h3>
+                <span className="text-sm text-gray-500">
+                  {allUsers.length} utilisateur(s)
+                </span>
+              </div>
               {allUsers.length === 0 ? (
                 <div className="text-center py-12">
                   <Users size={48} className="text-gray-400 mx-auto mb-4" />
@@ -1057,6 +1398,9 @@ const Profile: React.FC = () => {
                         </th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
                           Statut
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                          Actions
                         </th>
                       </tr>
                     </thead>
@@ -1096,6 +1440,91 @@ const Profile: React.FC = () => {
                               {user.blocked ? "Bloqué" : "Actif"}
                             </span>
                           </td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-2">
+                              {user.blocked ? (
+                                <button
+                                  onClick={async () => {
+                                    if (
+                                      window.confirm(
+                                        `Débloquer l'utilisateur ${user.name} ?`
+                                      )
+                                    ) {
+                                      try {
+                                        await userService.unblockUser(user.id);
+                                        setMessage({
+                                          type: "success",
+                                          text: "Utilisateur débloqué avec succès",
+                                        });
+                                        loadRoleSpecificData();
+                                      } catch {
+                                        setMessage({
+                                          type: "error",
+                                          text: "Erreur lors du déblocage",
+                                        });
+                                      }
+                                    }
+                                  }}
+                                  className="text-green-600 hover:text-green-800 text-sm font-medium px-2 py-1 hover:bg-green-50 rounded"
+                                >
+                                  Débloquer
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={async () => {
+                                    if (
+                                      window.confirm(
+                                        `Bloquer l'utilisateur ${user.name} ?`
+                                      )
+                                    ) {
+                                      try {
+                                        await userService.blockUser(user.id);
+                                        setMessage({
+                                          type: "success",
+                                          text: "Utilisateur bloqué avec succès",
+                                        });
+                                        loadRoleSpecificData();
+                                      } catch {
+                                        setMessage({
+                                          type: "error",
+                                          text: "Erreur lors du blocage",
+                                        });
+                                      }
+                                    }
+                                  }}
+                                  className="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 hover:bg-red-50 rounded"
+                                >
+                                  Bloquer
+                                </button>
+                              )}
+                              <button
+                                onClick={async () => {
+                                  if (
+                                    window.confirm(
+                                      `Supprimer définitivement l'utilisateur ${user.name} ?`
+                                    )
+                                  ) {
+                                    try {
+                                      await userService.deleteUser(user.id);
+                                      setMessage({
+                                        type: "success",
+                                        text: "Utilisateur supprimé avec succès",
+                                      });
+                                      loadRoleSpecificData();
+                                    } catch {
+                                      setMessage({
+                                        type: "error",
+                                        text: "Erreur lors de la suppression",
+                                      });
+                                    }
+                                  }
+                                }}
+                                className="text-gray-600 hover:text-gray-800 text-sm font-medium px-2 py-1 hover:bg-gray-50 rounded"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1114,10 +1543,19 @@ const Profile: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-800">
                   Gestion des Produits
                 </h3>
-                <span className="text-sm text-gray-500">
-                  {allProducts.length} produit(s) • {stats.pendingProducts} en
-                  attente
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-500">
+                    {allProducts.length} produit(s) • {stats.pendingProducts} en
+                    attente
+                  </span>
+                  <button
+                    onClick={handleAddProduct}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Plus size={20} />
+                    Ajouter un produit
+                  </button>
+                </div>
               </div>
               {allProducts.length === 0 ? (
                 <div className="text-center py-12">
@@ -1221,12 +1659,16 @@ const Profile: React.FC = () => {
                                 </>
                               )}
                               <button
-                                onClick={() =>
-                                  (window.location.href = `/product/${product.id}`)
-                                }
+                                onClick={() => handleEditProduct(product.id)}
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 hover:bg-blue-50 rounded"
                               >
-                                Voir
+                                Modifier
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 hover:bg-red-50 rounded"
+                              >
+                                Supprimer
                               </button>
                             </div>
                           </td>
@@ -1239,7 +1681,6 @@ const Profile: React.FC = () => {
             </div>
           </div>
         )}
-
         {/* ONGLET MES PRODUITS - PRODUCTEUR */}
         {!dataLoading && activeTab === "my-products" && isProducer() && (
           <div className="bg-white rounded-xl shadow-sm border">
@@ -1248,13 +1689,19 @@ const Profile: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-800">
                   Mes Produits
                 </h3>
-                <button
-                  onClick={handleAddProduct}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
-                >
-                  <Plus size={20} />
-                  Ajouter un produit
-                </button>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-gray-500">
+                    {userProducts.length} produit(s) • {stats.pendingProducts}{" "}
+                    en attente d'approbation
+                  </span>
+                  <button
+                    onClick={handleAddProduct}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Plus size={20} />
+                    Ajouter un produit
+                  </button>
+                </div>
               </div>
 
               {userProducts.length === 0 ? (
@@ -1309,27 +1756,40 @@ const Profile: React.FC = () => {
                         <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                           {product.description}
                         </p>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center mb-3">
                           <span className="text-lg font-bold text-green-600">
                             {product.price?.toLocaleString()} FCFA
                           </span>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEditProduct(product.id)}
-                              className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"
-                              title="Modifier"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
-                              title="Supprimer"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
+                          <span className="text-sm text-gray-500">
+                            Stock: {product.stock || 0}
+                          </span>
                         </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditProduct(product.id)}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Edit size={16} />
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Trash2 size={16} />
+                            Supprimer
+                          </button>
+                        </div>
+                        {product.status === "pending" && (
+                          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                            ⏳ En attente de validation par l'administrateur
+                          </div>
+                        )}
+                        {product.status === "rejected" && (
+                          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800">
+                            ❌ Produit rejeté par l'administrateur
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1343,9 +1803,15 @@ const Profile: React.FC = () => {
         {!dataLoading && activeTab === "my-orders" && isClient() && (
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                Mes Commandes
-              </h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Mes Commandes
+                </h3>
+                <span className="text-sm text-gray-500">
+                  {userOrders.length} commande(s) • {stats.pendingOrders} en
+                  attente
+                </span>
+              </div>
 
               {userOrders.length === 0 ? (
                 <div className="text-center py-12">
@@ -1415,12 +1881,33 @@ const Profile: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Articles de la commande */}
+                      <div className="mb-4">
+                        <h4 className="font-medium text-gray-700 mb-2">
+                          Articles:
+                        </h4>
+                        <div className="space-y-2">
+                          {order.items?.map((item, index) => (
+                            <div
+                              key={index}
+                              className="flex justify-between items-center text-sm"
+                            >
+                              <span>{item.productName}</span>
+                              <span>
+                                {item.quantity} x {item.price?.toLocaleString()}{" "}
+                                FCFA
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
                       <div className="flex justify-between items-center">
                         <button
                           onClick={() =>
                             (window.location.href = `/order/${order.id}`)
                           }
-                          className="text-blue-600 hover:text-blue-700 font-medium"
+                          className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                         >
                           Voir les détails
                         </button>
@@ -1429,10 +1916,31 @@ const Profile: React.FC = () => {
                             onClick={() =>
                               handleUpdateOrderStatus(order.id, "cancelled")
                             }
-                            className="text-red-600 hover:text-red-700 font-medium"
+                            className="text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
                           >
-                            Annuler la commande
+                            <XCircle size={16} />
+                            Demander l'annulation
                           </button>
+                        )}
+                        {order.status === "processing" && (
+                          <div className="text-sm text-blue-600">
+                            ✅ Commande confirmée et en préparation
+                          </div>
+                        )}
+                        {order.status === "shipped" && (
+                          <div className="text-sm text-orange-600">
+                            🚚 Commande expédiée
+                          </div>
+                        )}
+                        {order.status === "delivered" && (
+                          <div className="text-sm text-green-600">
+                            📦 Commande livrée
+                          </div>
+                        )}
+                        {order.status === "cancelled" && (
+                          <div className="text-sm text-red-600">
+                            ❌ Commande annulée
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1442,6 +1950,8 @@ const Profile: React.FC = () => {
             </div>
           </div>
         )}
+        {/* Les autres onglets (commandes, utilisateurs, produits, mes produits, mes commandes) restent similaires */}
+        {/* ... Le code existant pour ces onglets ... */}
       </div>
     </div>
   );

@@ -2,10 +2,10 @@ import type { User } from "../types";
 
 const API_URL = "http://localhost:5000/users";
 
-const fetchAPI = async (
+const fetchAPI = async <T>(
   url: string,
   options: RequestInit = {}
-): Promise<unknown> => {
+): Promise<T> => {
   const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
@@ -23,25 +23,25 @@ const fetchAPI = async (
 
 export const userService = {
   getAllUsers: async (): Promise<User[]> => {
-    return (await fetchAPI(API_URL)) as User[];
+    return await fetchAPI<User[]>(API_URL);
   },
 
   getUserById: async (id: string): Promise<User> => {
-    return (await fetchAPI(`${API_URL}/${id}`)) as User;
+    return await fetchAPI<User>(`${API_URL}/${id}`);
   },
 
   blockUser: async (id: string): Promise<User> => {
-    return (await fetchAPI(`${API_URL}/${id}`, {
+    return await fetchAPI<User>(`${API_URL}/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ blocked: true }),
-    })) as User;
+    });
   },
 
   unblockUser: async (id: string): Promise<User> => {
-    return (await fetchAPI(`${API_URL}/${id}`, {
+    return await fetchAPI<User>(`${API_URL}/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ blocked: false }),
-    })) as User;
+    });
   },
 
   deleteUser: async (id: string): Promise<boolean> => {
@@ -52,21 +52,22 @@ export const userService = {
   },
 
   updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
-    return (await fetchAPI(`${API_URL}/${id}`, {
+    return await fetchAPI<User>(`${API_URL}/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
-    })) as User;
+    });
   },
 
   createUser: async (userData: Partial<User>): Promise<User> => {
-    return (await fetchAPI(API_URL, {
+    return await fetchAPI<User>(API_URL, {
       method: "POST",
       body: JSON.stringify({
         ...userData,
+        id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         blocked: false,
       }),
-    })) as User;
+    });
   },
 };
 
