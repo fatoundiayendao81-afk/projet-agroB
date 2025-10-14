@@ -55,8 +55,7 @@ const About: React.FC = () => {
       role: "Co-fondateur & CTO",
       description:
         "Expert en développement et innovation technologique, passionné par la transformation digitale de l'agriculture.",
-      image:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      image: "./src/assets/co-fondateur.png",
       specialties: ["Développement", "Blockchain", "IA"],
     },
     {
