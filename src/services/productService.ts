@@ -150,16 +150,20 @@ export const productService = {
           throw new Error("Erreur lors de la mise à jour du produit");
         return updateResponse.json();
       }
-      case "delete": {
-        const deleteResponse = await fetch(`${API_URL}/${approval.productId}`, {
-          method: "DELETE",
-        });
+      case "delete":
+        {
+          const deleteResponse = await fetch(
+            `${API_URL}/${approval.productId}`,
+            {
+              method: "DELETE",
+            }
+          );
 
-        if (!deleteResponse.ok)
-          throw new Error("Erreur lors de la suppression du produit");
-        return true;
-      }
-          throw new Error("Erreur lors de la suppression du produit");
+          if (!deleteResponse.ok)
+            throw new Error("Erreur lors de la suppression du produit");
+          return true;
+        }
+        throw new Error("Erreur lors de la suppression du produit");
         return true;
 
       default:
