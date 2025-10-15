@@ -55,7 +55,7 @@ const About: React.FC = () => {
       role: "Co-fondateur & CTO",
       description:
         "Expert en développement et innovation technologique, passionné par la transformation digitale de l'agriculture.",
-      image: "./src/assets/co-fondateur.png",
+      image: "./src/assets/image/co-fondateur.png",
       specialties: ["Développement", "Blockchain", "IA"],
     },
     {
@@ -64,8 +64,8 @@ const About: React.FC = () => {
       description:
         "Visionnaire de l'agriculture digitale, elle combine expertise business et passion pour l'innovation agricole.",
       image:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      specialties: ["Stratégie", "Marketing", "Relations"],
+        "./src/assets/image/fatou.jpg",
+      specialties: ["Développement","Stratégie", "Marketing", "Relations"],
     },
   ];
 

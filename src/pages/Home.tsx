@@ -36,11 +36,41 @@ const Home: React.FC = () => {
     {
       id: 2,
       image:
-        "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=80",
+        "src/assets/imageCarousel/image1.jpg",
       title: "Circuit Court Garanti",
       description: "Soutenez l'agriculture locale avec des produits de qualité",
       badge: "🔄 Circuit Court",
       gradient: "from-black/30 to-black/50", // Overlay plus léger
+    },
+     {
+      id: 3,
+      image:
+        "src/assets/imageCarousel/bb.jpg",
+      title: "Produits Frais de la Ferme",
+      description:
+        "Des produits agricoles frais directement de nos producteurs locaux",
+      badge: "🌱 Fraîcheur Garantie",
+      gradient: "from-black/40 to-black/60", // Overlay plus léger
+    },
+      {
+      id: 4,
+      image:
+        "src/assets/imageCarousel/image.jpg",
+      title: "Produits Frais de la Ferme",
+      description:
+        "Des produits agricoles frais directement de nos producteurs locaux",
+      badge: "🌱 Fraîcheur Garantie",
+      gradient: "from-black/40 to-black/60", // Overlay plus léger
+    },
+    {
+      id: 5,
+      image:
+        "src/assets/imageCarousel/image2.jpg",
+      title: "Produits Frais de la Ferme",
+      description:
+        "Des produits agricoles frais directement de nos producteurs locaux",
+      badge: "🌱 Fraîcheur Garantie",
+      gradient: "from-black/40 to-black/60", // Overlay plus léger
     },
   ];
 
