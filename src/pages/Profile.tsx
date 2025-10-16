@@ -5,6 +5,7 @@ import { productService } from "../services/productService";
 import orderService from "../services/orderService";
 import userService from "../services/userService";
 import approvalService from "../services/approvalService";
+import Swal from "sweetalert2";
 import type {
   Product,
   Order,
@@ -347,33 +348,59 @@ const Profile: React.FC = () => {
   const handleDeleteProduct = async (productId: string): Promise<void> => {
     if (!currentUser) return;
 
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
+    const result = await Swal.fire({
+      title: "Supprimer le produit ?",
+      text: "Êtes-vous sûr de vouloir supprimer ce produit ?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler",
+    });
+
+    if (result.isConfirmed) {
       try {
         if (isProducer()) {
-          // Pour les producteurs, créer une demande d'approbation
           const approval = await productService.deleteProduct(productId);
-          // Use the approval variable here
           console.log(approval);
           setMessage({
             type: "success",
             text: "Demande de suppression soumise pour approbation",
           });
-          loadRoleSpecificData();
         } else if (isAdmin()) {
-          // Les admins peuvent supprimer directement
           await productService.adminDeleteProduct(productId);
           setMessage({
             type: "success",
             text: "Produit supprimé avec succès !",
           });
-          loadRoleSpecificData();
         }
+
+        loadRoleSpecificData();
+
+        // ✅ Afficher une alerte de succès
+        Swal.fire({
+          title: "Succès",
+          text: isProducer()
+            ? "Votre demande de suppression a été envoyée pour approbation."
+            : "Le produit a été supprimé avec succès.",
+          icon: "success",
+        });
       } catch (error) {
         setMessage({
           type: "error",
           text:
             (error as Error).message ||
             "Erreur lors de la suppression du produit",
+        });
+
+        // ❌ Afficher une alerte d’erreur
+        Swal.fire({
+          title: "Erreur",
+          text:
+            (error as Error).message ||
+            "Une erreur est survenue lors de la suppression du produit.",
+          icon: "error",
         });
       }
     }
