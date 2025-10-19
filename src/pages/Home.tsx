@@ -35,27 +35,24 @@ const Home: React.FC = () => {
     },
     {
       id: 2,
-      image:
-        "src/assets/imageCarousel/image1.jpg",
+      image: "src/assets/imageCarousel/image1.jpg",
       title: "Circuit Court Garanti",
       description: "Soutenez l'agriculture locale avec des produits de qualité",
       badge: "🔄 Circuit Court",
       gradient: "from-black/30 to-black/50", // Overlay plus léger
     },
-     {
+    {
       id: 3,
-      image:
-        "src/assets/imageCarousel/bb.jpg",
+      image: "src/assets/imageCarousel/bb.jpg",
       title: "Produits Frais de la Ferme",
       description:
         "Des produits agricoles frais directement de nos producteurs locaux",
       badge: "🌱 Fraîcheur Garantie",
       gradient: "from-black/40 to-black/60", // Overlay plus léger
     },
-      {
+    {
       id: 4,
-      image:
-        "src/assets/imageCarousel/image.jpg",
+      image: "src/assets/imageCarousel/image.jpg",
       title: "Produits Frais de la Ferme",
       description:
         "Des produits agricoles frais directement de nos producteurs locaux",
@@ -64,8 +61,7 @@ const Home: React.FC = () => {
     },
     {
       id: 5,
-      image:
-        "src/assets/imageCarousel/image2.jpg",
+      image: "src/assets/imageCarousel/image2.jpg",
       title: "Produits Frais de la Ferme",
       description:
         "Des produits agricoles frais directement de nos producteurs locaux",
@@ -119,7 +115,7 @@ const Home: React.FC = () => {
       gradient: "from-orange-500/20 to-red-500/20",
     },
     {
-      name: "Grains & Céréales",
+      name: "Grains",
       image:
         "https://tse1.explicit.bing.net/th/id/OIP.YGaNPA2xYndx0TTXfpEBQQHaHa?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3",
       description: "Céréales et grains nutritifs",
