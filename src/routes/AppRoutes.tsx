@@ -7,7 +7,6 @@ import Profile from "../pages/Profile";
 import ProductList from "../pages/ProductList";
 import ProductDetail from "../pages/ProductDetail";
 import Cart from "../pages/Cart";
-import MyProducts from "../pages/MyProducts";
 import Livraison from "../components/Livraison";
 import Payment from "../components/Payment";
 import Confirmation from "../components/Confirmation";
@@ -26,7 +25,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/products" element={<ProductList />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/cart" element={<Cart />} />
-      <Route path="/my-products" element={<MyProducts />} />
       <Route path="/livraison" element={<Livraison />} />
       <Route path="/paiement" element={<Payment />} />
       <Route path="/confirmation" element={<Confirmation />} />

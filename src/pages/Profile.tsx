@@ -14,7 +14,8 @@ import type {
   OrderApproval,
   Stats,
 } from "../types";
-// Ajoutez ces imports si ce n'est pas déjà fait
+
+// Import des icônes Lucide React
 import {
   Package,
   ShoppingCart,
@@ -30,8 +31,41 @@ import {
   UserCheck,
   AlertTriangle,
   Loader,
-  FileCheck, // Ajoutez celui-ci si manquant
+  FileCheck,
+  CreditCard,
+  DollarSign,
+  TrendingUp,
+  Shield,
+  Mail,
+  Phone,
+  MapPin,
+  Store,
+  Download,
+  Search,
+  Eye,
+  Star,
+  Calendar,
+  Target,
+  PieChart,
+  Activity,
+  Crop,
+  UserCog,
+  Settings,
+  LogOut,
+  MessageSquare,
 } from "lucide-react";
+
+// Components Tremor pour les graphiques
+import {
+  Card,
+  Metric,
+  Text,
+  DonutChart,
+  LineChart,
+  BarChart,
+  ProgressBar,
+  Badge,
+} from "@tremor/react";
 import ApprovalsTab from "../components/ApprovalsTab";
 
 interface ProfileForm {
@@ -47,13 +81,14 @@ interface ExtendedStats extends Stats {
   pendingProductApprovals: number;
   pendingOrderApprovals: number;
   myPendingApprovals: number;
+  monthlyGrowth: number;
+  averageOrderValue: number;
+  conversionRate: number;
+  customerSatisfaction: number;
 }
 
 const Profile: React.FC = () => {
-  // Ajoutez cette fonction si ce n'est pas déjà fait
-  // (Supprimé car doublon plus bas)
-
-  const { currentUser, updateProfile, isClient, isProducer, isAdmin } =
+  const { currentUser, updateProfile, isClient, isProducer, isAdmin, logout } =
     useAuth();
 
   const [profile, setProfile] = useState<ProfileForm>({
@@ -83,6 +118,7 @@ const Profile: React.FC = () => {
   >([]);
   const [myOrderApprovals, setMyOrderApprovals] = useState<OrderApproval[]>([]);
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const [stats, setStats] = useState<ExtendedStats>({
     productsCount: 0,
@@ -99,7 +135,39 @@ const Profile: React.FC = () => {
     pendingProductApprovals: 0,
     pendingOrderApprovals: 0,
     myPendingApprovals: 0,
+    monthlyGrowth: 12.5,
+    averageOrderValue: 45200,
+    conversionRate: 3.2,
+    customerSatisfaction: 94.2,
   });
+
+  // Données simulées pour les graphiques
+  const salesData = [
+    { month: "Jan", sales: 1240000 },
+    { month: "Fév", sales: 1850000 },
+    { month: "Mar", sales: 1520000 },
+    { month: "Avr", sales: 2180000 },
+    { month: "Mai", sales: 1950000 },
+    { month: "Jun", sales: 2640000 },
+  ];
+
+  const categoryData = [
+    { name: "Légumes", value: 35 },
+    { name: "Fruits", value: 25 },
+    { name: "Produits Laitiers", value: 20 },
+    { name: "Viandes", value: 15 },
+    { name: "Autres", value: 5 },
+  ];
+
+  const performanceData = [
+    { name: "Lun", value: 65 },
+    { name: "Mar", value: 78 },
+    { name: "Mer", value: 82 },
+    { name: "Jeu", value: 75 },
+    { name: "Ven", value: 88 },
+    { name: "Sam", value: 92 },
+    { name: "Dim", value: 70 },
+  ];
 
   useEffect(() => {
     if (currentUser) {
@@ -271,6 +339,10 @@ const Profile: React.FC = () => {
       pendingProductApprovals: approvalStats.pendingProductApprovals,
       pendingOrderApprovals: approvalStats.pendingOrderApprovals,
       myPendingApprovals: approvalStats.totalApprovals,
+      monthlyGrowth: 12.5,
+      averageOrderValue: 45200,
+      conversionRate: 3.2,
+      customerSatisfaction: 94.2,
     });
   };
 
@@ -328,7 +400,6 @@ const Profile: React.FC = () => {
 
   const handleAddProduct = async (): Promise<void> => {
     if (isProducer() && currentUser) {
-      // Rediriger vers la page d'ajout de produit
       window.location.href = "/add-product";
     } else if (isAdmin()) {
       window.location.href = "/add-product";
@@ -337,10 +408,8 @@ const Profile: React.FC = () => {
 
   const handleEditProduct = (productId: string): void => {
     if (isProducer() && currentUser) {
-      // Pour les producteurs, la modification passe par le système d'approbation
       window.location.href = `/edit-product/${productId}`;
     } else if (isAdmin()) {
-      // Les admins peuvent modifier directement
       window.location.href = `/edit-product/${productId}`;
     }
   };
@@ -378,7 +447,6 @@ const Profile: React.FC = () => {
 
         loadRoleSpecificData();
 
-        // ✅ Afficher une alerte de succès
         Swal.fire({
           title: "Succès",
           text: isProducer()
@@ -394,7 +462,6 @@ const Profile: React.FC = () => {
             "Erreur lors de la suppression du produit",
         });
 
-        // ❌ Afficher une alerte d’erreur
         Swal.fire({
           title: "Erreur",
           text:
@@ -440,13 +507,11 @@ const Profile: React.FC = () => {
 
     try {
       if (status === "cancelled" && isClient()) {
-        // Pour les clients, l'annulation passe par le système d'approbation
         const approval = await orderService.cancelOrder(
           orderId,
           "Annulation demandée par le client",
           currentUser.id
         );
-        // Use the approval variable here
         console.log(approval);
         setMessage({
           type: "success",
@@ -454,7 +519,6 @@ const Profile: React.FC = () => {
         });
         loadRoleSpecificData();
       } else if (isAdmin()) {
-        // Les admins peuvent modifier directement le statut
         await orderService.updateOrderStatus(orderId, status);
         setMessage({
           type: "success",
@@ -469,6 +533,16 @@ const Profile: React.FC = () => {
           (error as Error).message || "Erreur lors de la mise à jour du statut",
       });
     }
+  };
+
+  const handleExportData = (type: string) => {
+    Swal.fire({
+      title: "Exportation des données",
+      text: `Préparation de l'export ${type}...`,
+      icon: "info",
+      timer: 2000,
+      showConfirmButton: false,
+    });
   };
 
   const getStatusIcon = (status: string) => {
@@ -534,20 +608,42 @@ const Profile: React.FC = () => {
   const getApprovalStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "approved":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border-green-200";
       case "rejected":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
+  // Fonctions de filtrage
+  const filteredProducts = allProducts.filter(
+    (product) =>
+      product.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.sellerName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredOrders = allOrders.filter(
+    (order) =>
+      order.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.userEmail?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredUsers = allUsers.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center border border-gray-200">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-gray-200">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="text-red-600" size={32} />
           </div>
@@ -559,7 +655,7 @@ const Profile: React.FC = () => {
           </p>
           <button
             onClick={() => (window.location.href = "/login")}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
           >
             Se connecter
           </button>
@@ -569,50 +665,103 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* === EN-TÊTE DU PROFIL === */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <div className="flex-shrink-0">
-              <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl">
+        {/* === EN-TÊTE DU PROFIL AVEC DESIGN AMÉLIORÉ === */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400 to-blue-500 opacity-5 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-purple-400 to-pink-500 opacity-5 rounded-full translate-y-12 -translate-x-12"></div>
+
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
+            <div className="flex-shrink-0 relative">
+              <div className="w-28 h-28 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center text-white text-4xl shadow-lg">
                 {isAdmin() ? "👨‍💼" : isProducer() ? "👨‍🌾" : "👤"}
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    isAdmin()
+                      ? "bg-purple-500"
+                      : isProducer()
+                      ? "bg-green-500"
+                      : "bg-blue-500"
+                  }`}
+                >
+                  <Shield className="text-white" size={12} />
+                </div>
               </div>
             </div>
 
             <div className="flex-grow text-center md:text-left">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                {currentUser.name}
-              </h1>
-              <div
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-3 ${
-                  isAdmin()
-                    ? "bg-purple-100 text-purple-800"
-                    : isProducer()
-                    ? "bg-green-100 text-green-800"
-                    : "bg-blue-100 text-blue-800"
-                }`}
-              >
-                <span className="mr-2">
-                  {isAdmin() && "👨‍💼"}
-                  {isProducer() && "👨‍🌾"}
-                  {isClient() && "👤"}
-                </span>
-                {isAdmin() && "Administrateur"}
-                {isProducer() && "Producteur"}
-                {isClient() && "Client"}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                    {currentUser.name}
+                  </h1>
+                  <div
+                    className={`inline-flex items-center px-4 py-2 rounded-2xl text-sm font-semibold mb-3 shadow-sm ${
+                      isAdmin()
+                        ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                        : isProducer()
+                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
+                        : "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
+                    }`}
+                  >
+                    <span className="mr-2">
+                      {isAdmin() && "👨‍💼"}
+                      {isProducer() && "👨‍🌾"}
+                      {isClient() && "👤"}
+                    </span>
+                    {isAdmin() && "Administrateur"}
+                    {isProducer() && "Producteur"}
+                    {isClient() && "Client"}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-xl">
+                  <Calendar size={16} />
+                  <span>
+                    Membre depuis le{" "}
+                    <span className="font-semibold">
+                      {new Date(currentUser.createdAt).toLocaleDateString(
+                        "fr-FR"
+                      )}
+                    </span>
+                  </span>
+                </div>
               </div>
-              <p className="text-gray-600">
-                Membre depuis le{" "}
-                <span className="font-medium">
-                  {new Date(currentUser.createdAt).toLocaleDateString("fr-FR")}
-                </span>
-              </p>
+
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Mail size={16} className="text-gray-400" />
+                  <span>{currentUser.email}</span>
+                </div>
+                {currentUser.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="text-gray-400" />
+                    <span>{currentUser.phone}</span>
+                  </div>
+                )}
+                {currentUser.address && (
+                  <div className="flex items-center gap-2">
+                    <MapPin size={16} className="text-gray-400" />
+                    <span className="max-w-xs truncate">
+                      {currentUser.address}
+                    </span>
+                  </div>
+                )}
+                {currentUser.farmName && (
+                  <div className="flex items-center gap-2">
+                    <Store size={16} className="text-gray-400" />
+                    <span>{currentUser.farmName}</span>
+                  </div>
+                )}
+              </div>
 
               {/* Badge pour les approbations en attente */}
               {(isProducer() || isClient()) && stats.myPendingApprovals > 0 && (
-                <div className="mt-2 inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                  <Clock size={14} className="mr-1" />
+                <div className="mt-4 inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-xl text-sm font-medium shadow-sm">
+                  <Clock size={16} className="mr-2" />
                   {stats.myPendingApprovals} demande(s) en attente de validation
                 </div>
               )}
@@ -620,32 +769,32 @@ const Profile: React.FC = () => {
           </div>
         </div>
 
-        {/* === MESSAGES D'ALERTE === */}
+        {/* === MESSAGES D'ALERTE AMÉLIORÉS === */}
         {message.text && (
           <div
-            className={`mb-6 p-4 rounded-lg border ${
+            className={`mb-6 p-4 rounded-xl border-l-4 shadow-sm ${
               message.type === "success"
-                ? "bg-green-50 border-green-200 text-green-800"
-                : "bg-red-50 border-red-200 text-red-800"
+                ? "bg-green-50 border-green-400 text-green-800"
+                : "bg-red-50 border-red-400 text-red-800"
             }`}
           >
             <div className="flex items-center">
               {message.type === "success" ? (
-                <CheckCircle className="mr-3" size={20} />
+                <CheckCircle className="mr-3 flex-shrink-0" size={20} />
               ) : (
-                <AlertTriangle className="mr-3" size={20} />
+                <AlertTriangle className="mr-3 flex-shrink-0" size={20} />
               )}
               <span className="font-medium">{message.text}</span>
             </div>
           </div>
         )}
 
-        {/* === NAVIGATION PAR ONGLETS === */}
+        {/* === NAVIGATION PAR ONGLETS PROFESSIONNELLE === */}
         <div className="mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 overflow-x-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2">
+            <nav className="flex space-x-1 overflow-x-auto">
               {[
-                { id: "overview", label: "Aperçu", icon: BarChart3 },
+                { id: "overview", label: "Tableau de Bord", icon: BarChart3 },
                 { id: "profile", label: "Profil", icon: UserCheck },
                 ...(isAdmin()
                   ? [
@@ -691,17 +840,17 @@ const Profile: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  className={`flex items-center gap-2 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap ${
                     activeTab === tab.id
-                      ? "border-green-500 text-green-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/25"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                   }`}
                 >
                   <tab.icon size={18} />
                   {tab.label}
                   {(tab.id === "approvals" || tab.id === "my-approvals") &&
                     stats.myPendingApprovals > 0 && (
-                      <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                         {stats.myPendingApprovals}
                       </span>
                     )}
@@ -713,339 +862,745 @@ const Profile: React.FC = () => {
 
         {/* === CONTENU DES ONGLETS === */}
 
-        {/* INDICATEUR DE CHARGEMENT */}
+        {/* INDICATEUR DE CHARGEMENT PROFESSIONNEL */}
         {dataLoading && (
-          <div className="flex justify-center items-center py-12">
-            <Loader className="animate-spin text-green-600 mr-3" size={24} />
-            <span className="text-gray-600">Chargement des données...</span>
+          <div className="flex justify-center items-center py-20">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <span className="text-gray-600 font-medium">
+                Chargement des données...
+              </span>
+            </div>
           </div>
         )}
 
-        {/* ONGLET APERÇU */}
+        {/* ONGLET TABLEAU DE BORD PROFESSIONNEL */}
         {!dataLoading && activeTab === "overview" && (
           <div className="space-y-8">
-            {/* STATISTIQUES ADMIN */}
+            {/* STATISTIQUES ADMIN AVEC TREMOR */}
             {isAdmin() && (
               <>
+                {/* KPI CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-blue-500 to-blue-600">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">
-                          Utilisateurs
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <Text className="text-blue-100">
+                          Utilisateurs Total
+                        </Text>
+                        <Metric className="text-white">
                           {stats.totalUsers}
-                        </p>
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <TrendingUp
+                            size={16}
+                            className="text-blue-200 mr-1"
+                          />
+                          <Text className="text-blue-200">
+                            +{stats.monthlyGrowth}% ce mois
+                          </Text>
+                        </div>
                       </div>
-                      <div className="p-3 bg-blue-100 rounded-lg">
-                        <Users className="text-blue-600" size={24} />
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <Users className="text-white" size={32} />
                       </div>
                     </div>
-                    <div className="mt-2 text-xs text-gray-500">
-                      {stats.totalProducers} producteurs • {stats.totalClients}{" "}
-                      clients
-                    </div>
-                  </div>
+                  </Card>
 
-                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-green-500 to-green-600">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">
-                          Produits
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <Text className="text-green-100">Produits</Text>
+                        <Metric className="text-white">
                           {stats.productsCount}
-                        </p>
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <Package size={16} className="text-green-200 mr-1" />
+                          <Text className="text-green-200">
+                            {stats.pendingProducts} en attente
+                          </Text>
+                        </div>
                       </div>
-                      <div className="p-3 bg-green-100 rounded-lg">
-                        <Package className="text-green-600" size={24} />
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <Package className="text-white" size={32} />
                       </div>
                     </div>
-                    <div className="mt-2 text-xs text-gray-500">
-                      {stats.pendingProducts} en attente
-                    </div>
-                  </div>
+                  </Card>
 
-                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-purple-500 to-purple-600">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">
-                          Commandes
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <Text className="text-purple-100">Commandes</Text>
+                        <Metric className="text-white">
                           {stats.ordersCount}
-                        </p>
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <ShoppingCart
+                            size={16}
+                            className="text-purple-200 mr-1"
+                          />
+                          <Text className="text-purple-200">
+                            {stats.completedOrders} livrées
+                          </Text>
+                        </div>
                       </div>
-                      <div className="p-3 bg-purple-100 rounded-lg">
-                        <ShoppingCart className="text-purple-600" size={24} />
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <ShoppingCart className="text-white" size={32} />
                       </div>
                     </div>
-                    <div className="mt-2 text-xs text-gray-500">
-                      {stats.completedOrders} livrées
-                    </div>
-                  </div>
+                  </Card>
 
-                  <div className="bg-white rounded-xl shadow-sm border p-6">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-orange-500 to-orange-600">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">
-                          Validations en attente
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {stats.myPendingApprovals}
+                        <Text className="text-orange-100">
+                          Chiffre d'Affaires
+                        </Text>
+                        <Metric className="text-white">
+                          {(stats.totalSales / 1000000).toFixed(1)}M FCFA
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <DollarSign
+                            size={16}
+                            className="text-orange-200 mr-1"
+                          />
+                          <Text className="text-orange-200">
+                            {stats.averageOrderValue.toLocaleString()} FCFA
+                            moyenne
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <CreditCard className="text-white" size={32} />
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* GRAPHIQUES ET ANALYTIQUES */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          Ventes Mensuelles
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Performance des ventes
                         </p>
                       </div>
-                      <div className="p-3 bg-orange-100 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-600">
+                        <TrendingUp size={20} />
+                        <span className="font-semibold">
+                          +{stats.monthlyGrowth}%
+                        </span>
+                      </div>
+                    </div>
+                    <LineChart
+                      data={salesData}
+                      index="month"
+                      categories={["sales"]}
+                      colors={["green"]}
+                      valueFormatter={(value) =>
+                        `${(value / 1000000).toFixed(1)}M FCFA`
+                      }
+                      className="h-72"
+                    />
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          Répartition par Catégorie
+                        </h3>
+                        <p className="text-sm text-gray-600">Part de marché</p>
+                      </div>
+                      <PieChart size={20} className="text-blue-600" />
+                    </div>
+                    <DonutChart
+                      data={categoryData}
+                      category="value"
+                      index="name"
+                      valueFormatter={(value) => `${value}%`}
+                      colors={["green", "blue", "yellow", "red", "purple"]}
+                      className="h-72"
+                    />
+                  </Card>
+                </div>
+
+                {/* STATISTIQUES DÉTAILLÉES */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-blue-100 rounded-xl">
+                        <Activity className="text-blue-600" size={24} />
+                      </div>
+                      <div>
+                        <Text>Commandes Actives</Text>
+                        <Metric>
+                          {stats.pendingOrders + stats.shippedOrders}
+                        </Metric>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-green-100 rounded-xl">
+                        <Target className="text-green-600" size={24} />
+                      </div>
+                      <div>
+                        <Text>Taux de Conversion</Text>
+                        <Metric>{stats.conversionRate}%</Metric>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-orange-100 rounded-xl">
                         <FileCheck className="text-orange-600" size={24} />
                       </div>
+                      <div>
+                        <Text>Validations en Attente</Text>
+                        <Metric>{stats.myPendingApprovals}</Metric>
+                      </div>
                     </div>
-                    <div className="mt-2 text-xs text-gray-500">
-                      {stats.pendingProductApprovals} produits •{" "}
-                      {stats.pendingOrderApprovals} commandes
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-purple-100 rounded-xl">
+                        <Star className="text-purple-600" size={24} />
+                      </div>
+                      <div>
+                        <Text>Satisfaction Client</Text>
+                        <Metric>{stats.customerSatisfaction}%</Metric>
+                      </div>
                     </div>
-                  </div>
+                  </Card>
                 </div>
 
-                {/* STATUT DES COMMANDES */}
-                <div className="bg-white rounded-xl shadow-sm border p-6">
+                {/* PERFORMANCE RAPIDE */}
+                <Card className="rounded-2xl shadow-lg border-0">
                   <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                    Statut des Commandes
+                    Performance Hebdomadaire
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                      <div className="flex justify-center mb-2">
-                        <Clock className="text-yellow-600" size={24} />
-                      </div>
-                      <div className="text-gray-700 font-medium">
-                        En attente
-                      </div>
-                      <div className="text-2xl font-bold text-yellow-600">
-                        {stats.pendingOrders}
-                      </div>
-                    </div>
-                    <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex justify-center mb-2">
-                        <Truck className="text-blue-600" size={24} />
-                      </div>
-                      <div className="text-gray-700 font-medium">Expédiées</div>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {stats.shippedOrders}
-                      </div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex justify-center mb-2">
-                        <CheckCircle className="text-green-600" size={24} />
-                      </div>
-                      <div className="text-gray-700 font-medium">Livrées</div>
-                      <div className="text-2xl font-bold text-green-600">
-                        {stats.completedOrders}
-                      </div>
-                    </div>
-                    <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-                      <div className="flex justify-center mb-2">
-                        <XCircle className="text-red-600" size={24} />
-                      </div>
-                      <div className="text-gray-700 font-medium">Annulées</div>
-                      <div className="text-2xl font-bold text-red-600">
-                        {stats.cancelledOrders}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  <BarChart
+                    data={performanceData}
+                    index="name"
+                    categories={["value"]}
+                    colors={["green"]}
+                    valueFormatter={(value) => `${value}%`}
+                    className="h-72"
+                  />
+                </Card>
               </>
             )}
 
-            {/* STATISTIQUES PRODUCTEUR */}
+            {/* TABLEAU DE BORD PRODUCTEUR */}
             {isProducer() && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Produits
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats.productsCount}
-                      </p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-green-500 to-green-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-green-100">Produits Total</Text>
+                        <Metric className="text-white">
+                          {stats.productsCount}
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <Package size={16} className="text-green-200 mr-1" />
+                          <Text className="text-green-200">
+                            {stats.pendingProducts} en attente
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <Package className="text-white" size={32} />
+                      </div>
                     </div>
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <Package className="text-green-600" size={24} />
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-blue-500 to-blue-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-blue-100">
+                          Produits Approuvés
+                        </Text>
+                        <Metric className="text-white">
+                          {stats.completedOrders}
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <CheckCircle
+                            size={16}
+                            className="text-blue-200 mr-1"
+                          />
+                          <Text className="text-blue-200">
+                            {(
+                              (stats.completedOrders / stats.productsCount) *
+                              100
+                            ).toFixed(1)}
+                            % de taux d'approbation
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <CheckCircle className="text-white" size={32} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500">
-                    {stats.pendingProducts} en attente d'approbation
-                  </div>
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-orange-500 to-orange-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-orange-100">
+                          Demandes en Attente
+                        </Text>
+                        <Metric className="text-white">
+                          {stats.myPendingApprovals}
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <Clock size={16} className="text-orange-200 mr-1" />
+                          <Text className="text-orange-200">
+                            En cours de traitement
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <FileCheck className="text-white" size={32} />
+                      </div>
+                    </div>
+                  </Card>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Produits Approuvés
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats.completedOrders}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <CheckCircle className="text-blue-600" size={24} />
-                    </div>
+                {/* PERFORMANCE DES PRODUITS */}
+                <Card className="rounded-2xl shadow-lg border-0">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                    Performance des Produits
+                  </h3>
+                  <div className="space-y-4">
+                    {userProducts.slice(0, 5).map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={product.image || "/api/placeholder/40/40"}
+                            alt={product.title}
+                            className="w-12 h-12 object-cover rounded-lg"
+                          />
+                          <div>
+                            <h4 className="font-semibold text-gray-800">
+                              {product.title}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {product.category}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <p className="font-semibold text-green-600">
+                              {product.price?.toLocaleString()} FCFA
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Stock: {product.stock}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                              product.status === "approved"
+                                ? "bg-green-100 text-green-800 border-green-200"
+                                : product.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                : "bg-red-100 text-red-800 border-red-200"
+                            }`}
+                          >
+                            {getProductStatusText(product.status || "pending")}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                </Card>
 
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Demandes en attente
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats.myPendingApprovals}
-                      </p>
+                {/* STATISTIQUES DE VENTES */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Statut des Produits
+                    </h4>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm text-gray-600 mb-1">
+                          <span>Approuvés</span>
+                          <span>{stats.completedOrders}</span>
+                        </div>
+                        <ProgressBar
+                          value={
+                            (stats.completedOrders / stats.productsCount) * 100
+                          }
+                          color="green"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-sm text-gray-600 mb-1">
+                          <span>En attente</span>
+                          <span>{stats.pendingProducts}</span>
+                        </div>
+                        <ProgressBar
+                          value={
+                            (stats.pendingProducts / stats.productsCount) * 100
+                          }
+                          color="yellow"
+                          className="mt-1"
+                        />
+                      </div>
                     </div>
-                    <div className="p-3 bg-orange-100 rounded-lg">
-                      <FileCheck className="text-orange-600" size={24} />
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Activité Récente
+                    </h4>
+                    <div className="space-y-3">
+                      {myProductApprovals.slice(0, 3).map((approval) => (
+                        <div
+                          key={approval.id}
+                          className="flex items-center gap-3 p-2 rounded-lg bg-gray-50"
+                        >
+                          <div
+                            className={`p-2 rounded-full ${
+                              approval.status === "approved"
+                                ? "bg-green-100 text-green-600"
+                                : approval.status === "rejected"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-yellow-100 text-yellow-600"
+                            }`}
+                          >
+                            <FileCheck size={16} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-800">
+                              {approval.action === "create"
+                                ? "Nouveau produit"
+                                : approval.action === "update"
+                                ? "Modification produit"
+                                : "Suppression produit"}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {getApprovalStatusText(approval.status)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  </Card>
                 </div>
               </div>
             )}
 
-            {/* STATISTIQUES CLIENT */}
+            {/* TABLEAU DE BORD CLIENT */}
             {isClient() && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Commandes
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-purple-500 to-purple-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-purple-100">Commandes Total</Text>
+                        <Metric className="text-white">
+                          {stats.ordersCount}
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <ShoppingCart
+                            size={16}
+                            className="text-purple-200 mr-1"
+                          />
+                          <Text className="text-purple-200">
+                            Historique complet
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <ShoppingCart className="text-white" size={32} />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-yellow-500 to-yellow-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-yellow-100">En Attente</Text>
+                        <Metric className="text-white">
+                          {stats.pendingOrders}
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <Clock size={16} className="text-yellow-200 mr-1" />
+                          <Text className="text-yellow-200">
+                            En cours de traitement
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <Clock className="text-white" size={32} />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-green-500 to-green-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-green-100">Livrées</Text>
+                        <Metric className="text-white">
+                          {stats.completedOrders}
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <CheckCircle
+                            size={16}
+                            className="text-green-200 mr-1"
+                          />
+                          <Text className="text-green-200">
+                            Commandes terminées
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <CheckCircle className="text-white" size={32} />
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-orange-500 to-orange-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-orange-100">En Cours</Text>
+                        <Metric className="text-white">
+                          {stats.myPendingApprovals}
+                        </Metric>
+                        <div className="flex items-center mt-2">
+                          <FileCheck
+                            size={16}
+                            className="text-orange-200 mr-1"
+                          />
+                          <Text className="text-orange-200">
+                            Demandes en attente
+                          </Text>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <FileCheck className="text-white" size={32} />
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* DERNIÈRES COMMANDES */}
+                <Card className="rounded-2xl shadow-lg border-0">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      Dernières Commandes
+                    </h3>
+                    <button
+                      onClick={() => handleExportData("commandes")}
+                      className="text-green-600 hover:text-green-700 font-medium flex items-center gap-2"
+                    >
+                      <Download size={16} />
+                      Exporter
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {userOrders.slice(0, 5).map((order) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                      >
+                        <div>
+                          <h4 className="font-semibold text-gray-800">
+                            Commande #
+                            {order.orderNumber || order.id.slice(0, 8)}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {new Date(order.createdAt).toLocaleDateString(
+                              "fr-FR"
+                            )}{" "}
+                            • {order.items?.length || 0} articles
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-semibold text-green-600">
+                            {order.total?.toLocaleString()} FCFA
+                          </span>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                              order.status === "delivered"
+                                ? "bg-green-100 text-green-800 border-green-200"
+                                : order.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                : order.status === "shipped"
+                                ? "bg-blue-100 text-blue-800 border-blue-200"
+                                : "bg-red-100 text-red-800 border-red-200"
+                            }`}
+                          >
+                            {getStatusText(order.status)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* RÉSUMÉ DES DÉPENSES */}
+                <Card className="rounded-2xl shadow-lg border-0">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                    Vos Dépenses
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center p-4 bg-blue-50 rounded-xl">
+                      <DollarSign
+                        className="text-blue-600 mx-auto mb-2"
+                        size={24}
+                      />
+                      <p className="text-2xl font-bold text-blue-600">
+                        {stats.totalSales?.toLocaleString()} FCFA
                       </p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm text-gray-600">Total dépensé</p>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-xl">
+                      <ShoppingCart
+                        className="text-green-600 mx-auto mb-2"
+                        size={24}
+                      />
+                      <p className="text-2xl font-bold text-green-600">
                         {stats.ordersCount}
                       </p>
+                      <p className="text-sm text-gray-600">Commandes totales</p>
                     </div>
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <ShoppingCart className="text-purple-600" size={24} />
+                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                      <Star
+                        className="text-purple-600 mx-auto mb-2"
+                        size={24}
+                      />
+                      <p className="text-2xl font-bold text-purple-600">
+                        {stats.ordersCount > 0
+                          ? (
+                              stats.totalSales / stats.ordersCount
+                            ).toLocaleString()
+                          : 0}{" "}
+                        FCFA
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Moyenne par commande
+                      </p>
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        En attente
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats.pendingOrders}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-yellow-100 rounded-lg">
-                      <Clock className="text-yellow-600" size={24} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Livrées
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats.completedOrders}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <CheckCircle className="text-green-600" size={24} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Demandes en attente
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stats.myPendingApprovals}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-orange-100 rounded-lg">
-                      <FileCheck className="text-orange-600" size={24} />
-                    </div>
-                  </div>
-                </div>
+                </Card>
               </div>
             )}
           </div>
         )}
 
-        {/* ONGLET PROFIL */}
+        {/* ONGLET PROFIL - VERSION AMÉLIORÉE */}
         {!dataLoading && activeTab === "profile" && (
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
-                Informations personnelles
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-gray-800">
+                Informations Personnelles
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom complet
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={profile.name}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
+              <div className="flex gap-3">
+                {!isEditing ? (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+                  >
+                    <Edit size={20} />
+                    Modifier le profil
+                  </button>
+                ) : (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader className="animate-spin" size={20} />
+                          Sauvegarde...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={20} />
+                          Sauvegarder
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
+                    >
+                      <XCircle size={20} />
+                      Annuler
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Informations de base */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom complet *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={profile.name}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="Votre nom complet"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={profile.email}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="votre@email.com"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={profile.email}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Téléphone
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={profile.phone}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Adresse
-                  </label>
-                  <textarea
-                    name="address"
-                    value={profile.address}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed resize-vertical"
-                    rows={2}
-                  />
-                </div>
-                {isProducer() && (
-                  <>
-                    <div className="md:col-span-2">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Téléphone
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={profile.phone}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="+225 XX XX XX XX"
+                    />
+                  </div>
+                  {isProducer() && (
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Nom de l'exploitation
                       </label>
@@ -1055,64 +1610,151 @@ const Profile: React.FC = () => {
                         value={profile.farmName}
                         onChange={handleChange}
                         disabled={!isEditing}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="Nom de votre ferme"
                       />
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description
-                      </label>
-                      <textarea
-                        name="description"
-                        value={profile.description}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed resize-vertical"
-                        rows={4}
-                      />
-                    </div>
-                  </>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adresse
+                  </label>
+                  <textarea
+                    name="address"
+                    value={profile.address}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed resize-vertical"
+                    rows={3}
+                    placeholder="Votre adresse complète"
+                  />
+                </div>
+
+                {isProducer() && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description de l'exploitation
+                    </label>
+                    <textarea
+                      name="description"
+                      value={profile.description}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed resize-vertical"
+                      rows={4}
+                      placeholder="Décrivez votre exploitation, vos méthodes de production, etc."
+                    />
+                  </div>
                 )}
               </div>
-            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
+              {/* Sidebar avec statistiques */}
+              <div className="space-y-6">
+                <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <h4 className="font-semibold text-gray-800 mb-4">
+                    Statistiques du Compte
+                  </h4>
+                  <div className="space-y-3">
+                    {isProducer() && (
                       <>
-                        <Loader className="animate-spin" size={20} />
-                        Sauvegarde...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle size={20} />
-                        Sauvegarder
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            Produits
+                          </span>
+                          <span className="font-semibold">
+                            {stats.productsCount}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            En attente
+                          </span>
+                          <span className="font-semibold text-yellow-600">
+                            {stats.pendingProducts}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            Approuvés
+                          </span>
+                          <span className="font-semibold text-green-600">
+                            {stats.completedOrders}
+                          </span>
+                        </div>
                       </>
                     )}
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
-                  >
-                    <XCircle size={20} />
-                    Annuler
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
-                >
-                  <Edit size={20} />
-                  Modifier le profil
-                </button>
-              )}
+                    {isClient() && (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            Commandes
+                          </span>
+                          <span className="font-semibold">
+                            {stats.ordersCount}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">
+                            En cours
+                          </span>
+                          <span className="font-semibold text-blue-600">
+                            {stats.pendingOrders}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Livrées</span>
+                          <span className="font-semibold text-green-600">
+                            {stats.completedOrders}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Membre depuis
+                      </span>
+                      <span className="font-semibold">
+                        {new Date(currentUser.createdAt).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-br from-green-50 to-green-100">
+                  <h4 className="font-semibold text-gray-800 mb-4">
+                    Actions Rapides
+                  </h4>
+                  <div className="space-y-2">
+                    {isProducer() && (
+                      <button
+                        onClick={handleAddProduct}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Plus size={16} />
+                        Ajouter un produit
+                      </button>
+                    )}
+                    <button
+                      onClick={() => (window.location.href = "/settings")}
+                      className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Settings size={16} />
+                      Paramètres
+                    </button>
+                    <button
+                      onClick={logout}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <LogOut size={16} />
+                      Déconnexion
+                    </button>
+                  </div>
+                </Card>
+              </div>
             </div>
           </div>
         )}
@@ -1129,223 +1771,321 @@ const Profile: React.FC = () => {
         {!dataLoading &&
           activeTab === "my-approvals" &&
           (isProducer() || isClient()) && (
-            <div className="bg-white rounded-xl shadow-sm border">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  Mes Demandes de Validation
-                </h3>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Mes Demandes de Validation
+                  </h3>
+                  <Badge
+                    color={stats.myPendingApprovals > 0 ? "orange" : "green"}
+                    size="lg"
+                  >
+                    {stats.myPendingApprovals} en attente
+                  </Badge>
+                </div>
 
                 {/* Demandes de produits pour les producteurs */}
                 {isProducer() && (
-                  <div className="mb-8">
-                    <h4 className="text-lg font-medium text-gray-700 mb-4 flex items-center gap-2">
-                      <Package size={20} />
-                      Demandes de produits ({myProductApprovals.length})
-                    </h4>
+                  <Card className="rounded-2xl shadow-lg border-0 mb-6">
+                    <div className="p-6">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <Package size={20} />
+                        Demandes de produits ({myProductApprovals.length})
+                      </h4>
 
-                    {myProductApprovals.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <FileCheck
-                          size={48}
-                          className="mx-auto mb-4 text-gray-300"
-                        />
-                        <p>Aucune demande de produit en attente</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {myProductApprovals.map((approval) => (
-                          <div
-                            key={approval.id}
-                            className="border rounded-lg p-4"
-                          >
-                            <div className="flex justify-between items-start mb-3">
-                              <div>
-                                <h5 className="font-semibold">
-                                  {approval.action === "create" &&
-                                    "Création de produit"}
-                                  {approval.action === "update" &&
-                                    "Modification de produit"}
-                                  {approval.action === "delete" &&
-                                    "Suppression de produit"}
-                                </h5>
-                                {approval.productData && (
-                                  <p className="text-sm text-gray-600">
-                                    Produit: {approval.productData.title}
+                      {myProductApprovals.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <FileCheck
+                            size={48}
+                            className="mx-auto mb-4 text-gray-300"
+                          />
+                          <p className="text-gray-600">
+                            Aucune demande de produit en attente
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {myProductApprovals.map((approval) => (
+                            <div
+                              key={approval.id}
+                              className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow"
+                            >
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <h5 className="font-semibold text-gray-800">
+                                    {approval.action === "create" &&
+                                      "🆕 Création de produit"}
+                                    {approval.action === "update" &&
+                                      "✏️ Modification de produit"}
+                                    {approval.action === "delete" &&
+                                      "🗑️ Suppression de produit"}
+                                  </h5>
+                                  {approval.productData && (
+                                    <p className="text-sm text-gray-600 mt-1">
+                                      <strong>Produit:</strong>{" "}
+                                      {approval.productData.title}
+                                    </p>
+                                  )}
+                                  <p className="text-sm text-gray-500 mt-1">
+                                    <Calendar
+                                      size={14}
+                                      className="inline mr-1"
+                                    />
+                                    Soumis le{" "}
+                                    {new Date(
+                                      approval.createdAt
+                                    ).toLocaleDateString("fr-FR")}
                                   </p>
-                                )}
-                                <p className="text-sm text-gray-500">
-                                  Soumis le{" "}
-                                  {new Date(
-                                    approval.createdAt
-                                  ).toLocaleDateString("fr-FR")}
-                                </p>
+                                </div>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-medium border ${getApprovalStatusColor(
+                                    approval.status
+                                  )}`}
+                                >
+                                  {getApprovalStatusText(approval.status)}
+                                </span>
                               </div>
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs ${getApprovalStatusColor(
-                                  approval.status
-                                )}`}
-                              >
-                                {getApprovalStatusText(approval.status)}
-                              </span>
-                            </div>
 
-                            {approval.reviewComment && (
-                              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-700">
-                                  <strong>Commentaire de l'admin:</strong>{" "}
-                                  {approval.reviewComment}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                              {approval.reviewComment && (
+                                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                  <p className="text-sm text-gray-700 flex items-start gap-2">
+                                    <MessageSquare
+                                      size={16}
+                                      className="text-blue-600 mt-0.5 flex-shrink-0"
+                                    />
+                                    <span>
+                                      <strong>Commentaire de l'admin:</strong>{" "}
+                                      {approval.reviewComment}
+                                    </span>
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
                 )}
 
                 {/* Demandes de commandes pour les clients */}
                 {isClient() && (
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-700 mb-4 flex items-center gap-2">
-                      <ShoppingCart size={20} />
-                      Demandes de commandes ({myOrderApprovals.length})
-                    </h4>
+                  <Card className="rounded-2xl shadow-lg border-0">
+                    <div className="p-6">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <ShoppingCart size={20} />
+                        Demandes de commandes ({myOrderApprovals.length})
+                      </h4>
 
-                    {myOrderApprovals.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <FileCheck
-                          size={48}
-                          className="mx-auto mb-4 text-gray-300"
-                        />
-                        <p>Aucune demande de commande en attente</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {myOrderApprovals.map((approval) => (
-                          <div
-                            key={approval.id}
-                            className="border rounded-lg p-4"
-                          >
-                            <div className="flex justify-between items-start mb-3">
-                              <div>
-                                <h5 className="font-semibold">
-                                  {approval.action === "create" &&
-                                    "Nouvelle commande"}
-                                  {approval.action === "cancel" &&
-                                    "Annulation de commande"}
-                                </h5>
-                                <p className="text-sm text-gray-600">
-                                  Commande: {approval.orderId}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  Soumis le{" "}
-                                  {new Date(
-                                    approval.createdAt
-                                  ).toLocaleDateString("fr-FR")}
-                                </p>
+                      {myOrderApprovals.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <FileCheck
+                            size={48}
+                            className="mx-auto mb-4 text-gray-300"
+                          />
+                          <p className="text-gray-600">
+                            Aucune demande de commande en attente
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {myOrderApprovals.map((approval) => (
+                            <div
+                              key={approval.id}
+                              className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow"
+                            >
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <h5 className="font-semibold text-gray-800">
+                                    {approval.action === "create" &&
+                                      "🆕 Nouvelle commande"}
+                                    {approval.action === "cancel" &&
+                                      "❌ Annulation de commande"}
+                                  </h5>
+                                  <p className="text-sm text-gray-600 mt-1">
+                                    <strong>Référence:</strong>{" "}
+                                    {approval.orderId}
+                                  </p>
+                                  <p className="text-sm text-gray-500 mt-1">
+                                    <Calendar
+                                      size={14}
+                                      className="inline mr-1"
+                                    />
+                                    Soumis le{" "}
+                                    {new Date(
+                                      approval.createdAt
+                                    ).toLocaleDateString("fr-FR")}
+                                  </p>
+                                </div>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-medium border ${getApprovalStatusColor(
+                                    approval.status
+                                  )}`}
+                                >
+                                  {getApprovalStatusText(approval.status)}
+                                </span>
                               </div>
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs ${getApprovalStatusColor(
-                                  approval.status
-                                )}`}
-                              >
-                                {getApprovalStatusText(approval.status)}
-                              </span>
+
+                              {approval.reviewComment && (
+                                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                  <p className="text-sm text-gray-700 flex items-start gap-2">
+                                    <MessageSquare
+                                      size={16}
+                                      className="text-blue-600 mt-0.5 flex-shrink-0"
+                                    />
+                                    <span>
+                                      <strong>Commentaire de l'admin:</strong>{" "}
+                                      {approval.reviewComment}
+                                    </span>
+                                  </p>
+                                </div>
+                              )}
                             </div>
-
-                            {approval.reviewComment && (
-                              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-700">
-                                  <strong>Commentaire de l'admin:</strong>{" "}
-                                  {approval.reviewComment}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
                 )}
               </div>
             </div>
           )}
-        {/* ONGLET COMMANDES - ADMIN */}
+
         {/* ONGLET COMMANDES - ADMIN */}
         {!dataLoading && activeTab === "orders" && isAdmin() && (
-          <div className="bg-white rounded-xl shadow-sm border">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Gestion des Commandes
-                </h3>
-                <span className="text-sm text-gray-500">
-                  {allOrders.length} commande(s) • {stats.pendingOrders} en
-                  attente
-                </span>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Gestion des Commandes
+                  </h3>
+                  <p className="text-gray-600 mt-1">
+                    {allOrders.length} commande(s) • {stats.pendingOrders} en
+                    attente
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+                  <div className="relative">
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Rechercher une commande..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full sm:w-64"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleExportData("commandes")}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Download size={18} />
+                    Exporter
+                  </button>
+                </div>
               </div>
-              {allOrders.length === 0 ? (
+
+              {filteredOrders.length === 0 ? (
                 <div className="text-center py-12">
                   <ShoppingCart
-                    size={48}
+                    size={64}
                     className="text-gray-400 mx-auto mb-4"
                   />
-                  <p className="text-gray-500">Aucune commande trouvée</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Aucune commande trouvée
+                  </h3>
+                  <p className="text-gray-500">
+                    {searchTerm
+                      ? "Aucune commande ne correspond à votre recherche"
+                      : "Aucune commande n'a été passée pour le moment"}
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50 rounded-l-xl">
                           Commande
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Client
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Date
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Total
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Statut
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50 rounded-r-xl">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {allOrders.map((order) => (
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredOrders.map((order) => (
                         <tr
                           key={order.id}
-                          className="border-b hover:bg-gray-50"
+                          className="hover:bg-gray-50 transition-colors"
                         >
-                          <td className="py-3 px-4 font-medium">
-                            #{order.orderNumber || order.id.slice(0, 8)}
-                          </td>
-                          <td className="py-3 px-4">
-                            {order.userName || order.userEmail || "Client"}
-                          </td>
-                          <td className="py-3 px-4">
-                            {new Date(order.createdAt).toLocaleDateString(
-                              "fr-FR"
-                            )}
-                          </td>
-                          <td className="py-3 px-4 font-semibold">
-                            {order.total?.toLocaleString()} FCFA
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              {getStatusIcon(order.status)}
-                              <span>{getStatusText(order.status)}</span>
+                          <td className="py-4 px-4 font-semibold">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <ShoppingCart
+                                  className="text-blue-600"
+                                  size={16}
+                                />
+                              </div>
+                              <span>
+                                #{order.orderNumber || order.id.slice(0, 8)}
+                              </span>
                             </div>
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-2">
+                          <td className="py-4 px-4">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {order.userName || "Client"}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {order.userEmail}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="text-sm text-gray-900">
+                              {new Date(order.createdAt).toLocaleDateString(
+                                "fr-FR"
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(order.createdAt).toLocaleTimeString(
+                                "fr-FR"
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="font-semibold text-green-600">
+                              {order.total?.toLocaleString()} FCFA
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(order.status)}
+                              <span className="font-medium">
+                                {getStatusText(order.status)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
                               <select
                                 value={order.status}
                                 onChange={(e) =>
@@ -1359,7 +2099,7 @@ const Profile: React.FC = () => {
                                       | "cancelled"
                                   )
                                 }
-                                className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
                               >
                                 <option value="pending">En attente</option>
                                 <option value="processing">
@@ -1373,9 +2113,10 @@ const Profile: React.FC = () => {
                                 onClick={() =>
                                   (window.location.href = `/order/${order.id}`)
                                 }
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 hover:bg-blue-50 rounded"
+                                className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Voir les détails"
                               >
-                                Détails
+                                <Eye size={18} />
                               </button>
                             </div>
                           </td>
@@ -1391,84 +2132,148 @@ const Profile: React.FC = () => {
 
         {/* ONGLET UTILISATEURS - ADMIN */}
         {!dataLoading && activeTab === "users" && isAdmin() && (
-          <div className="bg-white rounded-xl shadow-sm border">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Gestion des Utilisateurs
-                </h3>
-                <span className="text-sm text-gray-500">
-                  {allUsers.length} utilisateur(s)
-                </span>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Gestion des Utilisateurs
+                  </h3>
+                  <p className="text-gray-600 mt-1">
+                    {allUsers.length} utilisateur(s) • {stats.totalProducers}{" "}
+                    producteurs • {stats.totalClients} clients
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+                  <div className="relative">
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Rechercher un utilisateur..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full sm:w-64"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleExportData("utilisateurs")}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Download size={18} />
+                    Exporter
+                  </button>
+                </div>
               </div>
-              {allUsers.length === 0 ? (
+
+              {filteredUsers.length === 0 ? (
                 <div className="text-center py-12">
-                  <Users size={48} className="text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Aucun utilisateur trouvé</p>
+                  <Users size={64} className="text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Aucun utilisateur trouvé
+                  </h3>
+                  <p className="text-gray-500">
+                    {searchTerm
+                      ? "Aucun utilisateur ne correspond à votre recherche"
+                      : "Aucun utilisateur inscrit"}
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50 rounded-l-xl">
                           Utilisateur
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Email
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Rôle
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Date d'inscription
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Statut
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50 rounded-r-xl">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {allUsers.map((user) => (
-                        <tr key={user.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3 px-4 font-medium">{user.name}</td>
-                          <td className="py-3 px-4">{user.email}</td>
-                          <td className="py-3 px-4">
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredUsers.map((user) => (
+                        <tr
+                          key={user.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${
+                                  user.role === "admin"
+                                    ? "bg-purple-500"
+                                    : user.role === "producer"
+                                    ? "bg-green-500"
+                                    : "bg-blue-500"
+                                }`}
+                              >
+                                {user.role === "admin" && <UserCog size={20} />}
+                                {user.role === "producer" && <Crop size={20} />}
+                                {user.role === "client" && <Users size={20} />}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-gray-900">
+                                  {user.name}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {user.phone || "Aucun téléphone"}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="text-gray-900">{user.email}</div>
+                          </td>
+                          <td className="py-4 px-4">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs ${
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                 user.role === "admin"
-                                  ? "bg-purple-100 text-purple-800"
+                                  ? "bg-purple-100 text-purple-800 border border-purple-200"
                                   : user.role === "producer"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-blue-100 text-blue-800"
+                                  ? "bg-green-100 text-green-800 border border-green-200"
+                                  : "bg-blue-100 text-blue-800 border border-blue-200"
                               }`}
                             >
-                              {user.role === "admin" && "Administrateur"}
-                              {user.role === "producer" && "Producteur"}
-                              {user.role === "client" && "Client"}
+                              {user.role === "admin" && "👨‍💼 Administrateur"}
+                              {user.role === "producer" && "👨‍🌾 Producteur"}
+                              {user.role === "client" && "👤 Client"}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            {new Date(user.createdAt).toLocaleDateString(
-                              "fr-FR"
-                            )}
+                          <td className="py-4 px-4">
+                            <div className="text-sm text-gray-900">
+                              {new Date(user.createdAt).toLocaleDateString(
+                                "fr-FR"
+                              )}
+                            </div>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-4 px-4">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs ${
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                 user.blocked
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-green-100 text-green-800"
+                                  ? "bg-red-100 text-red-800 border border-red-200"
+                                  : "bg-green-100 text-green-800 border border-green-200"
                               }`}
                             >
-                              {user.blocked ? "Bloqué" : "Actif"}
+                              {user.blocked ? "🚫 Bloqué" : "✅ Actif"}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-2">
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
                               {user.blocked ? (
                                 <button
                                   onClick={async () => {
@@ -1492,9 +2297,10 @@ const Profile: React.FC = () => {
                                       }
                                     }
                                   }}
-                                  className="text-green-600 hover:text-green-800 text-sm font-medium px-2 py-1 hover:bg-green-50 rounded"
+                                  className="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded-lg transition-colors"
+                                  title="Débloquer l'utilisateur"
                                 >
-                                  Débloquer
+                                  <CheckCircle size={18} />
                                 </button>
                               ) : (
                                 <button
@@ -1519,9 +2325,10 @@ const Profile: React.FC = () => {
                                       }
                                     }
                                   }}
-                                  className="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 hover:bg-red-50 rounded"
+                                  className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Bloquer l'utilisateur"
                                 >
-                                  Bloquer
+                                  <XCircle size={18} />
                                 </button>
                               )}
                               <button
@@ -1546,9 +2353,10 @@ const Profile: React.FC = () => {
                                     }
                                   }
                                 }}
-                                className="text-gray-600 hover:text-gray-800 text-sm font-medium px-2 py-1 hover:bg-gray-50 rounded"
+                                className="text-gray-600 hover:text-gray-800 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                                title="Supprimer l'utilisateur"
                               >
-                                Supprimer
+                                <Trash2 size={18} />
                               </button>
                             </div>
                           </td>
@@ -1564,98 +2372,159 @@ const Profile: React.FC = () => {
 
         {/* ONGLET PRODUITS - ADMIN */}
         {!dataLoading && activeTab === "products" && isAdmin() && (
-          <div className="bg-white rounded-xl shadow-sm border">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Gestion des Produits
-                </h3>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-500">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Gestion des Produits
+                  </h3>
+                  <p className="text-gray-600 mt-1">
                     {allProducts.length} produit(s) • {stats.pendingProducts} en
                     attente
-                  </span>
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+                  <div className="relative">
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Rechercher un produit..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 w-full sm:w-64"
+                    />
+                  </div>
                   <button
                     onClick={handleAddProduct}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
                   >
-                    <Plus size={20} />
+                    <Plus size={18} />
                     Ajouter un produit
+                  </button>
+                  <button
+                    onClick={() => handleExportData("produits")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Download size={18} />
+                    Exporter
                   </button>
                 </div>
               </div>
-              {allProducts.length === 0 ? (
+
+              {filteredProducts.length === 0 ? (
                 <div className="text-center py-12">
-                  <Package size={48} className="text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Aucun produit trouvé</p>
+                  <Package size={64} className="text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Aucun produit trouvé
+                  </h3>
+                  <p className="text-gray-500">
+                    {searchTerm
+                      ? "Aucun produit ne correspond à votre recherche"
+                      : "Aucun produit disponible"}
+                  </p>
+                  <button
+                    onClick={handleAddProduct}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 mx-auto"
+                  >
+                    <Plus size={18} />
+                    Ajouter le premier produit
+                  </button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50 rounded-l-xl">
                           Produit
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Producteur
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Prix
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Stock
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
+                          Catégorie
+                        </th>
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50">
                           Statut
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700 bg-gray-50 rounded-r-xl">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {allProducts.map((product) => (
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredProducts.map((product) => (
                         <tr
                           key={product.id}
-                          className="border-b hover:bg-gray-50"
+                          className="hover:bg-gray-50 transition-colors"
                         >
-                          <td className="py-3 px-4">
+                          <td className="py-4 px-4">
                             <div className="flex items-center gap-3">
                               <img
                                 src={product.image || "/api/placeholder/40/40"}
                                 alt={product.title}
-                                className="w-10 h-10 object-cover rounded"
+                                className="w-12 h-12 object-cover rounded-lg"
                                 onError={(e) => {
                                   e.currentTarget.src =
                                     "/api/placeholder/40/40";
                                 }}
                               />
                               <div>
-                                <div className="font-medium">
+                                <div className="font-semibold text-gray-900">
                                   {product.title}
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                  {product.category}
+                                <div className="text-sm text-gray-500 line-clamp-1">
+                                  {product.description}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 px-4">{product.sellerName}</td>
-                          <td className="py-3 px-4 font-semibold">
-                            {product.price?.toLocaleString()} FCFA
+                          <td className="py-4 px-4">
+                            <div className="text-gray-900">
+                              {product.sellerName}
+                            </div>
                           </td>
-                          <td className="py-3 px-4">
-                            {product.stock || 0} unités
+                          <td className="py-4 px-4">
+                            <div className="font-semibold text-green-600">
+                              {product.price?.toLocaleString()} FCFA
+                            </div>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-4 px-4">
+                            <div
+                              className={`font-medium ${
+                                (product.stock || 0) > 10
+                                  ? "text-green-600"
+                                  : (product.stock || 0) > 0
+                                  ? "text-yellow-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {product.stock || 0} unités
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                              {product.category}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs ${
+                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${
                                 product.status === "approved"
-                                  ? "bg-green-100 text-green-800"
+                                  ? "bg-green-100 text-green-800 border-green-200"
                                   : product.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
+                                  ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                  : "bg-red-100 text-red-800 border-red-200"
                               }`}
                             >
                               {getProductStatusText(
@@ -1663,39 +2532,43 @@ const Profile: React.FC = () => {
                               )}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-2">
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2">
                               {product.status === "pending" && (
                                 <>
                                   <button
                                     onClick={() =>
                                       handleApproveProduct(product.id)
                                     }
-                                    className="text-green-600 hover:text-green-800 text-sm font-medium px-2 py-1 hover:bg-green-50 rounded"
+                                    className="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded-lg transition-colors"
+                                    title="Approuver le produit"
                                   >
-                                    Approuver
+                                    <CheckCircle size={18} />
                                   </button>
                                   <button
                                     onClick={() =>
                                       handleRejectProduct(product.id)
                                     }
-                                    className="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 hover:bg-red-50 rounded"
+                                    className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Rejeter le produit"
                                   >
-                                    Rejeter
+                                    <XCircle size={18} />
                                   </button>
                                 </>
                               )}
                               <button
                                 onClick={() => handleEditProduct(product.id)}
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 hover:bg-blue-50 rounded"
+                                className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Modifier le produit"
                               >
-                                Modifier
+                                <Edit size={18} />
                               </button>
                               <button
                                 onClick={() => handleDeleteProduct(product.id)}
-                                className="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 hover:bg-red-50 rounded"
+                                className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Supprimer le produit"
                               >
-                                Supprimer
+                                <Trash2 size={18} />
                               </button>
                             </div>
                           </td>
@@ -1708,33 +2581,43 @@ const Profile: React.FC = () => {
             </div>
           </div>
         )}
+
         {/* ONGLET MES PRODUITS - PRODUCTEUR */}
         {!dataLoading && activeTab === "my-products" && isProducer() && (
-          <div className="bg-white rounded-xl shadow-sm border">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Mes Produits
-                </h3>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-500">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Mes Produits
+                  </h3>
+                  <p className="text-gray-600 mt-1">
                     {userProducts.length} produit(s) • {stats.pendingProducts}{" "}
                     en attente d'approbation
-                  </span>
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
                   <button
                     onClick={handleAddProduct}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
                   >
-                    <Plus size={20} />
+                    <Plus size={18} />
                     Ajouter un produit
+                  </button>
+                  <button
+                    onClick={() => handleExportData("mes-produits")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Download size={18} />
+                    Exporter
                   </button>
                 </div>
               </div>
 
               {userProducts.length === 0 ? (
                 <div className="text-center py-12">
-                  <Package size={48} className="text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <Package size={64} className="text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Aucun produit
                   </h3>
                   <p className="text-gray-500 mb-4">
@@ -1742,9 +2625,9 @@ const Profile: React.FC = () => {
                   </p>
                   <button
                     onClick={handleAddProduct}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold inline-flex items-center gap-2"
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 mx-auto"
                   >
-                    <Plus size={20} />
+                    <Plus size={18} />
                     Ajouter un produit
                   </button>
                 </div>
@@ -1753,68 +2636,80 @@ const Profile: React.FC = () => {
                   {userProducts.map((product) => (
                     <div
                       key={product.id}
-                      className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                      className="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 bg-white"
                     >
-                      <img
-                        src={product.image || "/api/placeholder/300/200"}
-                        alt={product.title}
-                        className="w-full h-48 object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = "/api/placeholder/300/200";
-                        }}
-                      />
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-gray-900">
-                            {product.title}
-                          </h3>
+                      <div className="relative">
+                        <img
+                          src={product.image || "/api/placeholder/300/200"}
+                          alt={product.title}
+                          className="w-full h-48 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "/api/placeholder/300/200";
+                          }}
+                        />
+                        <div className="absolute top-3 right-3">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs ${
+                            className={`px-3 py-1 rounded-full text-xs font-semibold border ${
                               product.status === "approved"
-                                ? "bg-green-100 text-green-800"
+                                ? "bg-green-100 text-green-800 border-green-200"
                                 : product.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
+                                ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                : "bg-red-100 text-red-800 border-red-200"
                             }`}
                           >
                             {getProductStatusText(product.status || "pending")}
                           </span>
                         </div>
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                      </div>
+                      <div className="p-5">
+                        <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-1">
+                          {product.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                           {product.description}
                         </p>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-lg font-bold text-green-600">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-2xl font-bold text-green-600">
                             {product.price?.toLocaleString()} FCFA
                           </span>
-                          <span className="text-sm text-gray-500">
+                          <span
+                            className={`text-sm font-medium ${
+                              (product.stock || 0) > 10
+                                ? "text-green-600"
+                                : (product.stock || 0) > 0
+                                ? "text-yellow-600"
+                                : "text-red-600"
+                            }`}
+                          >
                             Stock: {product.stock || 0}
                           </span>
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEditProduct(product.id)}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
                           >
                             <Edit size={16} />
                             Modifier
                           </button>
                           <button
                             onClick={() => handleDeleteProduct(product.id)}
-                            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
                           >
                             <Trash2 size={16} />
                             Supprimer
                           </button>
                         </div>
                         {product.status === "pending" && (
-                          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                            ⏳ En attente de validation par l'administrateur
+                          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-xs text-yellow-800 flex items-center gap-2">
+                            <Clock size={14} />⏳ En attente de validation par
+                            l'administrateur
                           </div>
                         )}
                         {product.status === "rejected" && (
-                          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800">
-                            ❌ Produit rejeté par l'administrateur
+                          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-center gap-2">
+                            <XCircle size={14} />❌ Produit rejeté par
+                            l'administrateur
                           </div>
                         )}
                       </div>
@@ -1828,25 +2723,43 @@ const Profile: React.FC = () => {
 
         {/* ONGLET MES COMMANDES - CLIENT */}
         {!dataLoading && activeTab === "my-orders" && isClient() && (
-          <div className="bg-white rounded-xl shadow-sm border">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Mes Commandes
-                </h3>
-                <span className="text-sm text-gray-500">
-                  {userOrders.length} commande(s) • {stats.pendingOrders} en
-                  attente
-                </span>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    Mes Commandes
+                  </h3>
+                  <p className="text-gray-600 mt-1">
+                    {userOrders.length} commande(s) • {stats.pendingOrders} en
+                    attente
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+                  <button
+                    onClick={() => handleExportData("mes-commandes")}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Download size={18} />
+                    Exporter
+                  </button>
+                  <button
+                    onClick={() => (window.location.href = "/products")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                  >
+                    <ShoppingCart size={18} />
+                    Nouvelle commande
+                  </button>
+                </div>
               </div>
 
               {userOrders.length === 0 ? (
                 <div className="text-center py-12">
                   <ShoppingCart
-                    size={48}
+                    size={64}
                     className="text-gray-400 mx-auto mb-4"
                   />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Aucune commande
                   </h3>
                   <p className="text-gray-500 mb-4">
@@ -1854,121 +2767,162 @@ const Profile: React.FC = () => {
                   </p>
                   <button
                     onClick={() => (window.location.href = "/products")}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold"
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 mx-auto"
                   >
+                    <ShoppingCart size={18} />
                     Découvrir les produits
                   </button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {userOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="border rounded-lg p-6 hover:shadow-md transition-shadow"
+                      className="border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 bg-white"
                     >
-                      <div className="flex justify-between items-start mb-4">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
                         <div>
-                          <h3 className="font-semibold text-lg">
+                          <h3 className="font-bold text-xl text-gray-900">
                             Commande #
                             {order.orderNumber || order.id.slice(0, 8)}
                           </h3>
-                          <p className="text-gray-500">
+                          <p className="text-gray-500 mt-1">
                             Passée le{" "}
                             {new Date(order.createdAt).toLocaleDateString(
+                              "fr-FR"
+                            )}{" "}
+                            à{" "}
+                            {new Date(order.createdAt).toLocaleTimeString(
                               "fr-FR"
                             )}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mt-2 lg:mt-0">
                           {getStatusIcon(order.status)}
-                          <span className="font-medium">
+                          <span className="font-semibold text-lg">
                             {getStatusText(order.status)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Total</p>
-                          <p className="text-lg font-bold text-green-600">
-                            {order.total?.toLocaleString()} FCFA
-                          </p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <div className="flex items-center gap-3">
+                            <CreditCard className="text-green-600" size={20} />
+                            <div>
+                              <p className="text-sm text-gray-600">Total</p>
+                              <p className="text-lg font-bold text-green-600">
+                                {order.total?.toLocaleString()} FCFA
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Articles</p>
-                          <p className="font-medium">
-                            {order.items?.length || 0} article(s)
-                          </p>
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <div className="flex items-center gap-3">
+                            <Package className="text-blue-600" size={20} />
+                            <div>
+                              <p className="text-sm text-gray-600">Articles</p>
+                              <p className="text-lg font-bold text-blue-600">
+                                {order.items?.length || 0} article(s)
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Livraison</p>
-                          <p className="font-medium">
-                            {order.shippingAddress || "Adresse non spécifiée"}
-                          </p>
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <div className="flex items-center gap-3">
+                            <MapPin className="text-purple-600" size={20} />
+                            <div>
+                              <p className="text-sm text-gray-600">Livraison</p>
+                              <p className="text-sm font-medium text-purple-600 line-clamp-1">
+                                {order.shippingAddress ||
+                                  "Adresse non spécifiée"}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
                       {/* Articles de la commande */}
                       <div className="mb-4">
-                        <h4 className="font-medium text-gray-700 mb-2">
-                          Articles:
+                        <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                          <Package size={18} />
+                          Articles commandés:
                         </h4>
                         <div className="space-y-2">
                           {order.items?.map((item, index) => (
                             <div
                               key={index}
-                              className="flex justify-between items-center text-sm"
+                              className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg"
                             >
-                              <span>{item.productName}</span>
-                              <span>
-                                {item.quantity} x {item.price?.toLocaleString()}{" "}
-                                FCFA
-                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-800">
+                                  {item.productName}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-semibold text-gray-900">
+                                  {item.quantity} x{" "}
+                                  {item.price?.toLocaleString()} FCFA
+                                </span>
+                                <div className="text-xs text-gray-500">
+                                  Sous-total:{" "}
+                                  {(
+                                    item.quantity * (item.price || 0)
+                                  ).toLocaleString()}{" "}
+                                  FCFA
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-200">
                         <button
                           onClick={() =>
                             (window.location.href = `/order/${order.id}`)
                           }
-                          className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                          className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2 transition-colors"
                         >
+                          <Eye size={18} />
                           Voir les détails
                         </button>
-                        {order.status === "pending" && (
-                          <button
-                            onClick={() =>
-                              handleUpdateOrderStatus(order.id, "cancelled")
-                            }
-                            className="text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
-                          >
-                            <XCircle size={16} />
-                            Demander l'annulation
-                          </button>
-                        )}
-                        {order.status === "processing" && (
-                          <div className="text-sm text-blue-600">
-                            ✅ Commande confirmée et en préparation
-                          </div>
-                        )}
-                        {order.status === "shipped" && (
-                          <div className="text-sm text-orange-600">
-                            🚚 Commande expédiée
-                          </div>
-                        )}
-                        {order.status === "delivered" && (
-                          <div className="text-sm text-green-600">
-                            📦 Commande livrée
-                          </div>
-                        )}
-                        {order.status === "cancelled" && (
-                          <div className="text-sm text-red-600">
-                            ❌ Commande annulée
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {order.status === "pending" && (
+                            <button
+                              onClick={() =>
+                                handleUpdateOrderStatus(order.id, "cancelled")
+                              }
+                              className="text-red-600 hover:text-red-700 font-semibold flex items-center gap-2 transition-colors"
+                            >
+                              <XCircle size={18} />
+                              Demander l'annulation
+                            </button>
+                          )}
+                          {order.status === "processing" && (
+                            <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full flex items-center gap-2">
+                              <CheckCircle size={16} />✅ Commande confirmée et
+                              en préparation
+                            </div>
+                          )}
+                          {order.status === "shipped" && (
+                            <div className="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-full flex items-center gap-2">
+                              <Truck size={16} />
+                              🚚 Commande expédiée
+                            </div>
+                          )}
+                          {order.status === "delivered" && (
+                            <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full flex items-center gap-2">
+                              <CheckCircle size={16} />
+                              📦 Commande livrée
+                            </div>
+                          )}
+                          {order.status === "cancelled" && (
+                            <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded-full flex items-center gap-2">
+                              <XCircle size={16} />❌ Commande annulée
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1977,8 +2931,6 @@ const Profile: React.FC = () => {
             </div>
           </div>
         )}
-        {/* Les autres onglets (commandes, utilisateurs, produits, mes produits, mes commandes) restent similaires */}
-        {/* ... Le code existant pour ces onglets ... */}
       </div>
     </div>
   );

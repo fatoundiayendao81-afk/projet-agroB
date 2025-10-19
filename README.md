@@ -2,6 +2,11 @@ npm install -g json-server
 
 npx json-server --watch db.json --port 5000
 
+npm install @tremor/react
+npm install recharts
+npm install lucide-react
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
