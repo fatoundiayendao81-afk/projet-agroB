@@ -54,18 +54,17 @@ const About: React.FC = () => {
       name: "Abdoul Salam Diallo",
       role: "Co-fondateur & CTO",
       description:
-        "Expert en développement et innovation technologique, passionné par la transformation digitale de l'agriculture.",
+        "Ingénieur passionné par le développement technologique et l’innovation numérique, engagé dans la transformation digitale du secteur agricole. Technologies émergentes : Intelligence Artificielle, Big Data, innovation appliquée. Programmation & développement : Conception et déploiement de solutions logicielles. Mathématiques appliquées : Algèbre linéaire, statistiques et modélisation pour l’IA. Veille technologique : Suivi actif des tendances en Data Science et Intelligence Artificielle.",
       image: "./src/assets/image/co-fondateur.png",
-      specialties: ["Développement", "Blockchain", "IA"],
+      specialties: ["Développement web", "Data Engineering", "Data Science"],
     },
     {
       name: "Fatou Ndiaye",
       role: "Co-fondatrice & CEO",
       description:
         "Visionnaire de l'agriculture digitale, elle combine expertise business et passion pour l'innovation agricole.",
-      image:
-        "./src/assets/image/fatou.jpg",
-      specialties: ["Développement","Stratégie", "Marketing", "Relations"],
+      image: "./src/assets/image/fatou.jpg",
+      specialties: ["Développement", "Stratégie", "Marketing", "Relations"],
     },
   ];
 

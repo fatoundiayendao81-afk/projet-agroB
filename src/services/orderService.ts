@@ -1,3 +1,4 @@
+// services/orderService.ts
 import type { Order, OrderItem, OrderApproval } from "../types";
 import { approvalService } from "./approvalService";
 
@@ -44,6 +45,46 @@ export const getOrderById = async (orderId: string): Promise<Order> => {
   return await fetchAPI<Order>(`${API_URL}/${orderId}`);
 };
 
+// NOUVELLE MÉTHODE : Créer une commande directement (sans approbation pour les clients)
+export const createOrderDirect = async (
+  orderData: Partial<Order>
+): Promise<Order> => {
+  // Validation des données
+  const errors = validateOrderData(orderData);
+  if (errors.length > 0) {
+    throw new Error(`Données invalides: ${errors.join(", ")}`);
+  }
+
+  // Vérification du stock
+  const stockErrors = await checkStock(orderData.items || []);
+  if (stockErrors.length > 0) {
+    throw new Error(`Problèmes de stock: ${stockErrors.join(", ")}`);
+  }
+
+  const newOrder: Order = {
+    id: Date.now().toString(),
+    orderNumber: `CMD-${Date.now()}`,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    date: new Date().toISOString().split("T")[0],
+    ...orderData,
+  } as Order;
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newOrder),
+  });
+
+  if (!response.ok) {
+    throw new Error("Erreur lors de la création de la commande");
+  }
+
+  return response.json();
+};
+
+// Ancienne méthode (gardée pour la compatibilité)
 export const createOrder = async (
   orderData: Partial<Order>
 ): Promise<OrderApproval> => {
@@ -70,6 +111,30 @@ export const createOrder = async (
   });
 
   return approval;
+};
+
+// NOUVELLE MÉTHODE : Créer une commande complète depuis le processus de paiement
+export const createOrderFromCheckout = async (checkoutData: {
+  cartItems: OrderItem[];
+  total: number;
+  shippingAddress: string;
+  paymentMethod: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+}): Promise<Order> => {
+  const orderData: Partial<Order> = {
+    userId: checkoutData.userId || "guest",
+    userName: checkoutData.userName || "Client invité",
+    userEmail: checkoutData.userEmail,
+    items: checkoutData.cartItems,
+    total: checkoutData.total,
+    shippingAddress: checkoutData.shippingAddress,
+    paymentMethod: checkoutData.paymentMethod,
+    status: "pending",
+  };
+
+  return await createOrderDirect(orderData);
 };
 
 export const cancelOrder = async (
@@ -112,6 +177,7 @@ export const executeOrderAction = async (
         throw new Error("Données de commande manquantes");
       }
 
+      // Créer la commande directement dans la base
       const orderToCreate = {
         ...approval.orderData,
         id: Date.now().toString(),
@@ -376,14 +442,20 @@ export const validateOrderData = (orderData: Partial<Order>): string[] => {
     errors.push("Adresse de livraison requise");
   }
 
+  if (!orderData.paymentMethod) {
+    errors.push("Méthode de paiement requise");
+  }
+
   return errors;
 };
 
 export const checkStock = async (items: OrderItem[]): Promise<string[]> => {
   const stockErrors: string[] = [];
 
+  // Dans une vraie application, on vérifierait le stock réel depuis l'API produits
   for (const item of items) {
-    if (item.quantity > 10) {
+    if (item.quantity > 50) {
+      // Limite arbitraire pour la démo
       stockErrors.push(
         `Stock insuffisant pour le produit: ${item.productName}`
       );
@@ -399,6 +471,8 @@ const orderService = {
   getProducerOrders,
   getOrderById,
   createOrder,
+  createOrderDirect,
+  createOrderFromCheckout,
   updateOrderStatus,
   cancelOrder,
   deleteOrder,

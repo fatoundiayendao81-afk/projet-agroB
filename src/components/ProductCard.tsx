@@ -75,6 +75,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       price: product.price,
       image: product.image,
       quantity: 1,
+      sellerId: product.sellerId,
+      sellerName: product.sellerName,
     });
   };
 

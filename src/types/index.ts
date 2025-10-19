@@ -1,3 +1,16 @@
+// types.ts - Ajoutez cette interface
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onContinue?: () => void;
+  onGuestCheckout?: (userData: {
+    name: string;
+    email: string;
+    phone: string;
+  }) => void;
+  onUserCheckout?: () => void;
+}
+
 export interface User {
   id: string;
   name: string;

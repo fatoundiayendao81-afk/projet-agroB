@@ -1,3 +1,4 @@
+// pages/Confirmation.tsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
@@ -5,12 +6,14 @@ import { CheckCircle } from "lucide-react";
 interface LocationState {
   paymentMethod?: string;
   total?: number;
+  orderNumber?: string;
+  orderId?: string;
 }
 
 const Confirmation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { paymentMethod, total } = (location.state as LocationState) || {};
+  const { paymentMethod, total, orderNumber} = (location.state as LocationState) || {};
 
   const getPaymentLabel = (method: string | undefined): string => {
     switch (method) {
@@ -41,10 +44,14 @@ const Confirmation: React.FC = () => {
         </p>
 
         <div className="bg-gray-100 p-4 rounded-lg text-left space-y-2 mb-6">
+          {orderNumber && (
+            <p className="flex justify-between">
+              <span className="font-medium text-gray-700">Numéro de commande :</span>
+              <span className="text-gray-800 font-mono">{orderNumber}</span>
+            </p>
+          )}
           <p className="flex justify-between">
-            <span className="font-medium text-gray-700">
-              Méthode de paiement :
-            </span>
+            <span className="font-medium text-gray-700">Méthode de paiement :</span>
             <span className="text-gray-800">
               {getPaymentLabel(paymentMethod)}
             </span>

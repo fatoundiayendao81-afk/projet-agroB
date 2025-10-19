@@ -1,3 +1,4 @@
+// context/CartContext.tsx
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -7,6 +8,8 @@ export interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  sellerId: string;
+  sellerName: string;
 }
 
 interface CartStore {
@@ -78,7 +81,7 @@ export const useCartStore = create<CartStore>()(
       },
     }),
     {
-      name: "cart-storage", // Sauvegarde automatique dans localStorage
+      name: "cart-storage",
     }
   )
 );
