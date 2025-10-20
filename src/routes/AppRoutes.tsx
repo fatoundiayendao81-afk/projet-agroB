@@ -12,8 +12,7 @@ import Payment from "../components/Payment";
 import Confirmation from "../components/Confirmation";
 import About from "../pages/About";
 import AddProductForm from "../pages/AddProductForm";
-import EditProductForm from "../pages/EditProductForm";
-
+import EditProductPage from "../pages/EditProductPage"; // page wrapper pour modal
 
 const AppRoutes: React.FC = () => {
   return (
@@ -30,7 +29,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/confirmation" element={<Confirmation />} />
       <Route path="/about" element={<About />} />
       <Route path="/add-product" element={<AddProductForm />} />
-      <Route path="/edit-product/:id" element={<EditProductForm />} />
+      <Route path="/edit-product/:id" element={<EditProductPage />} />
     </Routes>
   );
 };
