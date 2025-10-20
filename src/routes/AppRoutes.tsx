@@ -11,7 +11,7 @@ import Livraison from "../components/Livraison";
 import Payment from "../components/Payment";
 import Confirmation from "../components/Confirmation";
 import About from "../pages/About";
-import AddProductForm from "../pages/AddProductForm";
+import AddProductForm from "../pages/AddProductModal";
 import EditProductPage from "../pages/EditProductPage"; // page wrapper pour modal
 
 const AppRoutes: React.FC = () => {

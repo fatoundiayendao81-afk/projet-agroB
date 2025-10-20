@@ -1,41 +1,27 @@
 import { useState } from "react";
-import EditProductModal from "./EditProductModal"; // le vrai modal
+import EditProductModal from "./EditProductModal";
 
-import type { Product } from "../types";
-
-type ProductItemProps = {
-  product: Product;
-  currentUser: any;
-  isProducer: () => boolean;
-  isAdmin: () => boolean;
-};
-
-const ProductItem = ({ product, currentUser, isProducer, isAdmin }: ProductItemProps) => {
-  const [modalOpen, setModalOpen] = useState(false);
+const ProductItem = ({ product }) => {
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="border p-3 rounded mb-2 flex justify-between items-center">
-      <div>
-        <p>{product.title}</p>
-        <p>{product.price} FCFA</p>
-      </div>
+    <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
+      <img src={product.image} alt={product.title} className="rounded-lg h-40 object-cover mb-4" />
+      <h3 className="text-lg font-semibold text-gray-800">{product.title}</h3>
+      <p className="text-gray-500">{product.price} FCFA</p>
+
       <button
-        className="bg-blue-500 text-white px-3 py-1 rounded"
-        onClick={() => setModalOpen(true)}
+        onClick={() => setOpen(true)}
+        className="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg"
       >
-        Modifier
+        ✏️ Modifier
       </button>
 
       <EditProductModal
-        productId={product.id}
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        currentUser={currentUser}
-        isProducer={isProducer}
-        isAdmin={isAdmin}
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        product={product}
       />
     </div>
   );
 };
-
-export default ProductItem;
