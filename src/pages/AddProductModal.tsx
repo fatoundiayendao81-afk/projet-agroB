@@ -15,6 +15,7 @@ const categories = [
 type AddProductModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onProductAdded?: () => void; // ✅ nouvelle prop
 };
 
 const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
@@ -47,15 +48,19 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
 
   if (!isOpen) return null;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : name === "price" || name === "stock" ? Number(value) : value,
-    }));
-  };
+ const handleChange = (e: any) => {
+  const { name, value, type, checked } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]:
+      type === "checkbox"
+        ? checked
+        : name === "price" || name === "stock"
+        ? Number(value)
+        : value,
+  }));
+};
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
