@@ -18,6 +18,7 @@ import Confirmation from "../components/Confirmation";
 
  import EditProductPage from "../pages/EditProductPage"; // page wrapper pour modal
  import AdminProductManager from "../pages/AdminProductManager";
+ import ProductPage from "../pages/ProductPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -39,6 +40,7 @@ const AppRoutes: React.FC = () => {
       * Route pour la page d'édition de produit
       <Route path="/edit-product/:id" element={<EditProductPage />} />
       <Route path="/admin/products" element={<AdminProductManager />} />
+      <Route path="/add-product" element={<ProductPage />} />
       
     </Routes>
   );

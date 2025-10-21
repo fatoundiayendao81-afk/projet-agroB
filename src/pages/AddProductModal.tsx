@@ -15,11 +15,11 @@ const categories = [
 type AddProductModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onProductAdded?: () => void; // ✅ nouvelle prop
+  onProductAdded?: () => void;
 };
 
-const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
-  const { currentUser, isProducer, isAdmin } = useAuth();
+const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalProps) => {
+  const { currentUser, isAdmin } = useAuth();
 
   const [formData, setFormData] = useState<Partial<Product>>({
     title: "",
@@ -31,10 +31,10 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
     available: true,
     stock: 0,
   });
-
-  const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
+  // Pré-remplir sellerId et farmName
   useEffect(() => {
     if (currentUser) {
       setFormData((prev) => ({
@@ -48,14 +48,17 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
 
   if (!isOpen) return null;
 
- const handleChange = (e: any) => {
-  const { name, value, type, checked } = e.target;
+ const handleChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+) => {
+  const { name, value, type } = e.target;
+
   setFormData((prev) => ({
     ...prev,
     [name]:
-      type === "checkbox"
-        ? checked
-        : name === "price" || name === "stock"
+      type === "checkbox" && "checked" in e.target
+        ? e.target.checked
+        : type === "number"
         ? Number(value)
         : value,
   }));
@@ -87,15 +90,20 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
 
     try {
       setLoading(true);
-      const productData = {
+
+      const productData: Partial<Product> = {
         ...formData,
         sellerId: currentUser.id,
         sellerName: currentUser.name,
         farmName: formData.farmName || currentUser.farmName || "",
         status: isAdmin() ? "approved" : "pending",
       };
+
       await productService.addProduct(productData);
+
       Swal.fire("Succès", "Produit ajouté avec succès", "success");
+
+      // Reset formulaire
       setFormData({
         title: "",
         description: "",
@@ -107,8 +115,11 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
         stock: 0,
       });
       setPreview(null);
+
       onClose();
+      if (onProductAdded) onProductAdded();
     } catch (err) {
+      console.error(err);
       Swal.fire("Erreur", "Impossible d'ajouter le produit", "error");
     } finally {
       setLoading(false);
@@ -130,106 +141,62 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Nom du produit *</label>
-            <input
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Ex: Tomates bio"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Description *</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-              rows={3}
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Décrivez brièvement votre produit..."
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Prix (FCFA) *</label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Stock *</label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              />
-            </div>
-          </div>
-
-          {/* Catégorie + unité */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Catégorie *</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              >
-                <option value="">Choisir une catégorie</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Unité de vente *</label>
-              <input
-                name="unit"
-                value={formData.unit}
-                onChange={handleChange}
-                required
-                className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="Ex: Kg, L, Unité..."
-              />
-            </div>
-          </div>
-
-          {/* Image */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Image du produit</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            />
-            {preview && (
-              <img
-                src={preview}
-                alt="Aperçu"
-                className="w-32 h-32 mt-3 object-cover rounded-xl border border-gray-200"
-              />
-            )}
-          </div>
+          <input
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="Nom du produit"
+            className="w-full border rounded-xl px-4 py-3"
+            required
+          />
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Description"
+            className="w-full border rounded-xl px-4 py-3"
+            required
+          />
+          <input
+            type="number"
+            name="price"
+            value={formData.price}
+            onChange={handleChange}
+            placeholder="Prix"
+            className="w-full border rounded-xl px-4 py-3"
+            required
+          />
+          <input
+            type="number"
+            name="stock"
+            value={formData.stock}
+            onChange={handleChange}
+            placeholder="Stock"
+            className="w-full border rounded-xl px-4 py-3"
+            required
+          />
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full border rounded-xl px-4 py-3"
+            required
+          >
+            <option value="">Choisir une catégorie</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+          <input
+            name="unit"
+            value={formData.unit}
+            onChange={handleChange}
+            placeholder="Unité"
+            className="w-full border rounded-xl px-4 py-3"
+            required
+          />
+          <input type="file" accept="image/*" onChange={handleImageChange} className="w-full border rounded-xl px-4 py-3"/>
+          {preview && <img src={preview} alt="Aperçu" className="w-32 h-32 mt-2 object-cover rounded-lg"/>}
 
           <div className="flex items-center gap-2">
             <input
@@ -237,25 +204,14 @@ const AddProductModal = ({ isOpen, onClose }: AddProductModalProps) => {
               name="available"
               checked={formData.available}
               onChange={handleChange}
-              className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              className="w-5 h-5"
             />
-            <label className="text-sm text-gray-700">Produit disponible à la vente</label>
+            <span>Produit disponible</span>
           </div>
 
-          {/* Boutons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-3 bg-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-300 transition"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition"
-            >
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={onClose} className="px-5 py-3 bg-gray-200 rounded-xl">Annuler</button>
+            <button type="submit" disabled={loading} className="px-6 py-3 bg-green-600 text-white rounded-xl">
               {loading ? "Envoi..." : "Ajouter le produit"}
             </button>
           </div>
