@@ -24,7 +24,7 @@
       "address": "123 Rue de l'Agriculture, Paris",
       "blocked": false,
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastLogin": "2025-10-19T17:51:20.807Z",
+      "lastLogin": "2025-10-20T10:55:34.179Z",
       "farmName": "",
       "description": ""
     },
@@ -105,7 +105,7 @@
       "description": "",
       "blocked": false,
       "createdAt": "2025-10-14T15:06:22.894Z",
-      "lastLogin": "2025-10-19T17:51:49.652Z"
+      "lastLogin": "2025-10-20T10:52:49.465Z"
     }
   ],
   "products": [
@@ -327,6 +327,35 @@
         }
       ],
       "total": 2004.3,
+      "shippingAddress": "route ouest, ziguinchor, Abdoul Salam DIALLO",
+      "paymentMethod": "livraison"
+    },
+    {
+      "id": "1760957597800",
+      "orderNumber": "CMD-1760957597800",
+      "status": "pending",
+      "createdAt": "2025-10-20T10:53:17.800Z",
+      "updatedAt": "2025-10-20T10:53:17.800Z",
+      "date": "2025-10-20",
+      "userId": "1760454382894",
+      "userName": "Abdoul Salam DIALLO",
+      "userEmail": "abdoulsalam142@gmail.com",
+      "items": [
+        {
+          "productId": "4",
+          "productName": "Carottes fraîches",
+          "quantity": 1,
+          "price": 23
+        },
+        {
+          "productId": "5",
+          "productName": "Poivrons rouges",
+          "quantity": 1,
+          "price": 3,
+          "sellerId": "2"
+        }
+      ],
+      "total": 2026,
       "shippingAddress": "route ouest, ziguinchor, Abdoul Salam DIALLO",
       "paymentMethod": "livraison"
     }
