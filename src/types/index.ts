@@ -24,6 +24,7 @@ export interface User {
   blocked: boolean;
   createdAt: string;
   lastLogin?: string;
+  
 }
 
 export interface Product {
@@ -31,12 +32,14 @@ export interface Product {
   title: string;
   description: string;
   price: number;
+  discountedPrice?: number;
   category: string;
   image: string;
   sellerId: string;
   sellerName: string;
   farmName?: string;
   unit?: string;
+   promo?: number;
   available: boolean;
   stock: number;
   createdAt: string;
@@ -73,6 +76,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   sellerId: string;
+  promo?: number;
 }
 
 export interface Stats {

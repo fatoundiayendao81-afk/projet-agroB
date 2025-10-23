@@ -18,7 +18,11 @@ type AddProductModalProps = {
   onProductAdded?: () => void;
 };
 
-const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalProps) => {
+const AddProductModal = ({
+  isOpen,
+  onClose,
+  onProductAdded,
+}: AddProductModalProps) => {
   const { currentUser, isAdmin } = useAuth();
 
   const [formData, setFormData] = useState<Partial<Product>>({
@@ -48,22 +52,23 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
 
   if (!isOpen) return null;
 
- const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-) => {
-  const { name, value, type } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
 
-  setFormData((prev) => ({
-    ...prev,
-    [name]:
-      type === "checkbox" && "checked" in e.target
-        ? e.target.checked
-        : type === "number"
-        ? Number(value)
-        : value,
-  }));
-};
-
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox" && "checked" in e.target
+          ? e.target.checked
+          : type === "number"
+          ? Number(value)
+          : value,
+    }));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,7 +89,11 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
     e.preventDefault();
 
     if (!currentUser) {
-      Swal.fire("Non connecté", "Veuillez vous connecter pour ajouter un produit", "error");
+      Swal.fire(
+        "Non connecté",
+        "Veuillez vous connecter pour ajouter un produit",
+        "error"
+      );
       return;
     }
 
@@ -128,25 +137,22 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative animate-fade-in">
+      <div className="bg-white rounded-3xl shadow-4xl w-full max-w-lg max-h-[100vh] overflow-y-auto p-3  relative animate-fade-in">
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition"
-        >
-          ✕
-        </button>
-
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Ajouter un nouveau produit
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
+      onClick={onClose}
+      className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition"
+    >
+      ✕
+    </button>
+        <h2 className="text-xl font-bold text-center text-black-600 mb-5 bg-green-400 p-3 rounded-lg">
+         ✏️ Ajouter un nouveau produit  </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             name="title"
             value={formData.title}
             onChange={handleChange}
             placeholder="Nom du produit"
-            className="w-full border rounded-xl px-4 py-3"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
             required
           />
           <textarea
@@ -154,37 +160,37 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
             value={formData.description}
             onChange={handleChange}
             placeholder="Description"
-            className="w-full border rounded-xl px-4 py-3"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
             required
           />
           <input
-            type="number"
             name="price"
             value={formData.price}
             onChange={handleChange}
-            placeholder="Prix"
-            className="w-full border rounded-xl px-4 py-3"
+            placeholder= "Prix (FCFA)"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
             required
           />
           <input
-            type="number"
             name="stock"
             value={formData.stock}
             onChange={handleChange}
             placeholder="Stock"
-            className="w-full border rounded-xl px-4 py-3"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
             required
           />
           <select
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="w-full border rounded-xl px-4 py-3"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
             required
           >
             <option value="">Choisir une catégorie</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.name}>{c.name}</option>
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
             ))}
           </select>
           <input
@@ -192,11 +198,22 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
             value={formData.unit}
             onChange={handleChange}
             placeholder="Unité"
-            className="w-full border rounded-xl px-4 py-3"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
             required
           />
-          <input type="file" accept="image/*" onChange={handleImageChange} className="w-full border rounded-xl px-4 py-3"/>
-          {preview && <img src={preview} alt="Aperçu" className="w-32 h-32 mt-2 object-cover rounded-lg"/>}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+          />
+          {preview && (
+            <img
+              src={preview}
+              alt="Aperçu"
+              className="w-24 h-24 mt-2 object-cover rounded-lg"
+            />
+          )}
 
           <div className="flex items-center gap-2">
             <input
@@ -204,14 +221,24 @@ const AddProductModal = ({ isOpen, onClose, onProductAdded }: AddProductModalPro
               name="available"
               checked={formData.available}
               onChange={handleChange}
-              className="w-5 h-5"
+              className="w-4 h-4"
             />
-            <span>Produit disponible</span>
+            <span className="text-sm">Produit disponible</span>
           </div>
 
           <div className="flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-5 py-3 bg-gray-200 rounded-xl">Annuler</button>
-            <button type="submit" disabled={loading} className="px-6 py-3 bg-green-600 text-white rounded-xl">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 rounded-lg text-sm"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 py-2 bg-green-600 text-white rounded-lg text-sm"
+            >
               {loading ? "Envoi..." : "Ajouter le produit"}
             </button>
           </div>

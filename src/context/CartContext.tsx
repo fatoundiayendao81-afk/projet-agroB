@@ -5,7 +5,9 @@ import { persist } from "zustand/middleware";
 export interface CartItem {
   id: string;
   name: string;
-  price: number;
+  price: number; // prix original
+  discountedPrice?: number; // prix après promo
+  promo?: number; // % de réduction
   image: string;
   quantity: number;
   sellerId: string;
@@ -32,6 +34,12 @@ export const useCartStore = create<CartStore>()(
           const existingItem = state.cartItems.find(
             (item) => item.id === product.id
           );
+
+          // Calcul du prix après promo
+          const discountedPrice = product.promo
+            ? Math.round(product.price - (product.price * product.promo) / 100)
+            : product.price;
+
           if (existingItem) {
             return {
               cartItems: state.cartItems.map((item) =>
@@ -41,8 +49,12 @@ export const useCartStore = create<CartStore>()(
               ),
             };
           }
+
           return {
-            cartItems: [...state.cartItems, { ...product, quantity: 1 }],
+            cartItems: [
+              ...state.cartItems,
+              { ...product, quantity: 1, discountedPrice },
+            ],
           };
         });
       },
@@ -67,10 +79,12 @@ export const useCartStore = create<CartStore>()(
         set({ cartItems: [] });
       },
 
+      // Total du panier en prenant en compte les promos
       getCartTotal: () => {
         const { cartItems } = get();
         return cartItems.reduce(
-          (total, item) => total + item.price * item.quantity,
+          (total, item) =>
+            total + (item.discountedPrice ?? item.price) * item.quantity,
           0
         );
       },

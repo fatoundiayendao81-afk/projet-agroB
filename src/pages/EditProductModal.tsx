@@ -93,11 +93,16 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-white/95 shadow-2xl rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 border border-gray-100 animate-fade-in">
-        {/* Header */}
-        <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">✏️ Modifier le produit</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition">✖</button>
+      <div className="bg-white rounded-3xl shadow-4xl w-full max-w-lg max-h-[100vh] overflow-y-auto p-3  relative animate-fade-in">
+  <button
+      onClick={onClose}
+      className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition"
+    >
+      ✕
+    </button>      {/* Header */}
+        <div className=" items-center border-b border-gray-200 pb-4 mb-6">
+          
+          <h2 className="text-xl font-bold text-center text-black-600 mb-5 bg-green-400 p-3 rounded-lg">✏️ Modifier le produit</h2>
         </div>
 
         {/* Form */}
