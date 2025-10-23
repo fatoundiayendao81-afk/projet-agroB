@@ -70,6 +70,8 @@ const ProductDetail: React.FC = () => {
           product.image ||
           "https://via.placeholder.com/300x200?text=Produit+Agricole",
         quantity: quantity,
+        sellerId: product.sellerId, // Assuming you have the sellerId from the product object
+        sellerName: product.sellerName, // Assuming you have the sellerName from the product object
       });
 
       setMessage({

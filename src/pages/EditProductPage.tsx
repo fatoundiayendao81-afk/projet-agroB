@@ -7,7 +7,7 @@ import type { Product } from "../types";
 
 const EditProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { currentUser, isProducer, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,8 +34,8 @@ const EditProductPage: React.FC = () => {
 
   return (
     <EditProductModal
-      key={product.id}            // ✅ force le re-mount pour formulaire propre
-      product={product}           // ✅ on passe le produit complet
+      key={product.id} // ✅ force le re-mount pour formulaire propre
+      product={product} // ✅ on passe le produit complet
       isOpen={true}
       onClose={() => window.history.back()}
       isAdmin={isAdmin()}
