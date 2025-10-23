@@ -60,7 +60,6 @@ import {
   Card,
   Metric,
   Text,
-  DonutChart,
   LineChart,
   BarChart,
   ProgressBar,
@@ -99,6 +98,19 @@ const Profile: React.FC = () => {
     farmName: "",
     description: "",
   });
+  const generateSalesPath = (data: Array<{ sales: number }>) => {
+    if (!data.length) return "";
+    const maxY = Math.max(...data.map((d) => d.sales));
+    const minY = Math.min(...data.map((d) => d.sales));
+
+    return data
+      .map((point, index) => {
+        const x = (index / (data.length - 1)) * 400;
+        const y = 240 - ((point.sales - minY) / (maxY - minY)) * 200;
+        return `${index === 0 ? "M" : "L"} ${x},${y}`;
+      })
+      .join(" ");
+  };
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -977,109 +989,394 @@ const Profile: React.FC = () => {
                   </Card>
                 </div>
 
-                {/* GRAPHIQUES ET ANALYTIQUES */}
+                {/* GRAPHIQUES ET ANALYTIQUES - DESIGN ULTRA MODERNE */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card className="rounded-2xl shadow-lg border-0">
-                    <div className="flex items-center justify-between mb-6">
+                  {/* Graphique des ventes - Design premium */}
+                  <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl shadow-2xl border border-gray-700/50 p-6 relative overflow-hidden">
+                    {/* Effet de brillance */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl"></div>
+
+                    <div className="flex items-center justify-between mb-8 relative z-10">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          Ventes Mensuelles
+                        <h3 className="text-xl font-bold text-white mb-2">
+                          📈 Ventes Mensuelles
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          Performance des ventes
+                        <p className="text-gray-400 text-sm">
+                          Évolution du chiffre d'affaires
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 text-green-600">
-                        <TrendingUp size={20} />
-                        <span className="font-semibold">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500/40 to-blue-500/40 backdrop-blur-sm rounded-2xl border border-green-400/50">
+                        <TrendingUp size={20} className="text-white" />
+                        <span className="font-bold text-white text-sm">
                           +{stats.monthlyGrowth}%
                         </span>
                       </div>
                     </div>
-                    <LineChart
-                      data={salesData}
-                      index="month"
-                      categories={["sales"]}
-                      colors={["green"]}
-                      valueFormatter={(value) =>
-                        `${(value / 1000000).toFixed(1)}M FCFA`
-                      }
-                      className="h-72"
-                    />
-                  </Card>
 
-                  <Card className="rounded-2xl shadow-lg border-0">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          Répartition par Catégorie
-                        </h3>
-                        <p className="text-sm text-gray-600">Part de marché</p>
+                    {/* Container graphique avec effet glass */}
+                    <div className="bg-black/30 backdrop-blur-sm rounded-2xl border border-gray-600/40 p-4 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10"></div>
+
+                      {/* Graphique avec dégradé personnalisé */}
+                      <div className="h-64 relative">
+                        <LineChart
+                          data={salesData}
+                          index="month"
+                          categories={["sales"]}
+                          colors={["cyan"]}
+                          valueFormatter={(value) =>
+                            `${(value / 1000000).toFixed(1)}M FCFA`
+                          }
+                          className="h-64"
+                        />
+
+                        {/* Overlay avec dégradé pour la courbe */}
+                        <div className="absolute inset-0 pointer-events-none">
+                          <svg className="w-full h-full" viewBox="0 0 400 240">
+                            <defs>
+                              <linearGradient
+                                id="lineGradient"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="0%"
+                              >
+                                <stop offset="0%" stopColor="#10b981" />
+                                <stop offset="50%" stopColor="#3b82f6" />
+                                <stop offset="100%" stopColor="#8b5cf6" />
+                              </linearGradient>
+                            </defs>
+
+                            {/* Recréer la ligne avec dégradé */}
+                            <path
+                              d={generateSalesPath(salesData)}
+                              stroke="url(#lineGradient)"
+                              strokeWidth="3"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </div>
                       </div>
-                      <PieChart size={20} className="text-blue-600" />
                     </div>
-                    <DonutChart
-                      data={categoryData}
-                      category="value"
-                      index="name"
-                      valueFormatter={(value) => `${value}%`}
-                      colors={["green", "blue", "yellow", "red", "purple"]}
-                      className="h-72"
-                    />
-                  </Card>
+
+                    {/* Légende en bas */}
+                    <div className="flex items-center justify-between mt-4 text-xs text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span>Chiffre d'affaires</span>
+                      </div>
+                      <span>Dernières 12 mois</span>
+                    </div>
+                  </div>
+
+                  {/* Graphique circulaire - Design premium avec camembert coloré */}
+                  <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl shadow-2xl border border-gray-700/50 p-6 relative overflow-hidden">
+                    {/* Effet de brillance */}
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+                    <div className="flex items-center justify-between mb-8 relative z-10">
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-2">
+                          🎯 Répartition Catégories
+                        </h3>
+                        <p className="text-gray-400 text-sm">
+                          Part de marché des produits
+                        </p>
+                      </div>
+                      <div className="w-10 h-10 bg-purple-500/20 backdrop-blur-sm rounded-xl border border-purple-500/30 flex items-center justify-center">
+                        <PieChart size={20} className="text-purple-400" />
+                      </div>
+                    </div>
+
+                    {/* Container graphique avec effet glass */}
+                    <div className="bg-black/20 backdrop-blur-sm rounded-2xl border border-gray-600/30 p-4 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5"></div>
+
+                      {/* Camembert personnalisé avec couleurs vives */}
+                      <div className="h-64 flex items-center justify-center">
+                        <div className="relative w-48 h-48">
+                          {/* Camembert avec dégradés colorés */}
+                          <svg
+                            viewBox="0 0 100 100"
+                            className="w-full h-full transform rotate-[-90deg]"
+                          >
+                            {/* Segment 1 - Vert */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="40"
+                              fill="transparent"
+                              stroke="url(#gradient1)"
+                              strokeWidth="20"
+                              strokeDasharray={`${
+                                categoryData[0]?.value || 25
+                              } ${100 - (categoryData[0]?.value || 25)}`}
+                              strokeDashoffset="0"
+                            />
+
+                            {/* Segment 2 - Bleu */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="40"
+                              fill="transparent"
+                              stroke="url(#gradient2)"
+                              strokeWidth="20"
+                              strokeDasharray={`${
+                                categoryData[1]?.value || 20
+                              } ${100 - (categoryData[1]?.value || 20)}`}
+                              strokeDashoffset={-(categoryData[0]?.value || 25)}
+                            />
+
+                            {/* Segment 3 - Jaune */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="40"
+                              fill="transparent"
+                              stroke="url(#gradient3)"
+                              strokeWidth="20"
+                              strokeDasharray={`${
+                                categoryData[2]?.value || 15
+                              } ${100 - (categoryData[2]?.value || 15)}`}
+                              strokeDashoffset={
+                                -(categoryData[0]?.value || 25) -
+                                (categoryData[1]?.value || 20)
+                              }
+                            />
+
+                            {/* Segment 4 - Rouge */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="40"
+                              fill="transparent"
+                              stroke="url(#gradient4)"
+                              strokeWidth="20"
+                              strokeDasharray={`${
+                                categoryData[3]?.value || 10
+                              } ${100 - (categoryData[3]?.value || 10)}`}
+                              strokeDashoffset={
+                                -(categoryData[0]?.value || 25) -
+                                (categoryData[1]?.value || 20) -
+                                (categoryData[2]?.value || 15)
+                              }
+                            />
+
+                            {/* Segment 5 - Violet */}
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r="40"
+                              fill="transparent"
+                              stroke="url(#gradient5)"
+                              strokeWidth="20"
+                              strokeDasharray={`${
+                                categoryData[4]?.value || 30
+                              } ${100 - (categoryData[4]?.value || 30)}`}
+                              strokeDashoffset={
+                                -(categoryData[0]?.value || 25) -
+                                (categoryData[1]?.value || 20) -
+                                (categoryData[2]?.value || 15) -
+                                (categoryData[3]?.value || 10)
+                              }
+                            />
+
+                            {/* Définitions des dégradés */}
+                            <defs>
+                              <linearGradient
+                                id="gradient1"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                              >
+                                <stop offset="0%" stopColor="#10b981" />
+                                <stop offset="100%" stopColor="#059669" />
+                              </linearGradient>
+
+                              <linearGradient
+                                id="gradient2"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                              >
+                                <stop offset="0%" stopColor="#3b82f6" />
+                                <stop offset="100%" stopColor="#2563eb" />
+                              </linearGradient>
+
+                              <linearGradient
+                                id="gradient3"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                              >
+                                <stop offset="0%" stopColor="#f59e0b" />
+                                <stop offset="100%" stopColor="#d97706" />
+                              </linearGradient>
+
+                              <linearGradient
+                                id="gradient4"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                              >
+                                <stop offset="0%" stopColor="#ef4444" />
+                                <stop offset="100%" stopColor="#dc2626" />
+                              </linearGradient>
+
+                              <linearGradient
+                                id="gradient5"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                              >
+                                <stop offset="0%" stopColor="#8b5cf6" />
+                                <stop offset="100%" stopColor="#7c3aed" />
+                              </linearGradient>
+                            </defs>
+
+                            {/* Centre du camembert */}
+                            <circle cx="50" cy="50" r="25" fill="#1f2937" />
+                          </svg>
+
+                          {/* Texte au centre */}
+                          <div className="absolute inset-0 flex items-center justify-center transform rotate-90">
+                            <div className="text-center">
+                              <div className="text-white text-lg font-bold">
+                                100%
+                              </div>
+                              <div className="text-gray-400 text-xs">Total</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Légende des couleurs */}
+                    <div className="grid grid-cols-2 gap-3 mt-6">
+                      {categoryData.map((item, index) => (
+                        <div
+                          key={item.name}
+                          className="flex items-center gap-3 p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                          <div
+                            className="w-4 h-4 rounded-lg flex-shrink-0 shadow-lg"
+                            style={{
+                              background: `linear-gradient(135deg, ${
+                                index === 0
+                                  ? "#10b981, #059669"
+                                  : index === 1
+                                  ? "#3b82f6, #2563eb"
+                                  : index === 2
+                                  ? "#f59e0b, #d97706"
+                                  : index === 3
+                                  ? "#ef4444, #dc2626"
+                                  : "#8b5cf6, #7c3aed"
+                              })`,
+                            }}
+                          ></div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white text-sm font-medium truncate">
+                              {item.name}
+                            </div>
+                          </div>
+                          <div className="text-white font-bold text-sm">
+                            {item.value}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* STATISTIQUES DÉTAILLÉES */}
+                {/* STATISTIQUES DÉTAILLÉES - DESIGN MODERNE */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="rounded-2xl shadow-lg border-0">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-blue-100 rounded-xl">
-                        <Activity className="text-blue-600" size={24} />
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-xl p-6 relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
+                        <Activity className="text-white" size={24} />
                       </div>
                       <div>
-                        <Text>Commandes Actives</Text>
-                        <Metric>
+                        <p className="text-blue-100 text-sm font-medium">
+                          Commandes Actives
+                        </p>
+                        <p className="text-white text-2xl font-bold mt-1">
                           {stats.pendingOrders + stats.shippedOrders}
-                        </Metric>
+                        </p>
                       </div>
                     </div>
-                  </Card>
+                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
 
-                  <Card className="rounded-2xl shadow-lg border-0">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-green-100 rounded-xl">
-                        <Target className="text-green-600" size={24} />
+                  <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-xl p-6 relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
+                        <Target className="text-white" size={24} />
                       </div>
                       <div>
-                        <Text>Taux de Conversion</Text>
-                        <Metric>{stats.conversionRate}%</Metric>
+                        <p className="text-emerald-100 text-sm font-medium">
+                          Taux de Conversion
+                        </p>
+                        <p className="text-white text-2xl font-bold mt-1">
+                          {stats.conversionRate}%
+                        </p>
                       </div>
                     </div>
-                  </Card>
+                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
 
-                  <Card className="rounded-2xl shadow-lg border-0">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-orange-100 rounded-xl">
-                        <FileCheck className="text-orange-600" size={24} />
+                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl p-6 relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
+                        <FileCheck className="text-white" size={24} />
                       </div>
                       <div>
-                        <Text>Validations en Attente</Text>
-                        <Metric>{stats.myPendingApprovals}</Metric>
+                        <p className="text-amber-100 text-sm font-medium">
+                          Validations en Attente
+                        </p>
+                        <p className="text-white text-2xl font-bold mt-1">
+                          {stats.myPendingApprovals}
+                        </p>
                       </div>
                     </div>
-                  </Card>
+                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
 
-                  <Card className="rounded-2xl shadow-lg border-0">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-purple-100 rounded-xl">
-                        <Star className="text-purple-600" size={24} />
+                  <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl shadow-xl p-6 relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
+                        <Star className="text-white" size={24} />
                       </div>
                       <div>
-                        <Text>Satisfaction Client</Text>
-                        <Metric>{stats.customerSatisfaction}%</Metric>
+                        <p className="text-violet-100 text-sm font-medium">
+                          Satisfaction Client
+                        </p>
+                        <p className="text-white text-2xl font-bold mt-1">
+                          {stats.customerSatisfaction}%
+                        </p>
                       </div>
                     </div>
-                  </Card>
+                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* PERFORMANCE RAPIDE */}
