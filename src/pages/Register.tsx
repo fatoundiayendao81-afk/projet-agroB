@@ -48,7 +48,7 @@ const Register: React.FC = () => {
     text: "",
   });
 
-  const { register, currentUser, isAuthenticated } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -187,16 +187,16 @@ const Register: React.FC = () => {
     }
   };
 
-  const getRoleDescription = (role: "client" | "producer"): string => {
-    switch (role) {
-      case "client":
-        return "Achetez des produits frais directement auprès des producteurs locaux";
-      case "producer":
-        return "Vendez vos produits agricoles et gérez votre exploitation";
-      default:
-        return "";
-    }
-  };
+  // const getRoleDescription = (role: "client" | "producer"): string => {
+  //   switch (role) {
+  //     case "client":
+  //       return "Achetez des produits frais directement auprès des producteurs locaux";
+  //     case "producer":
+  //       return "Vendez vos produits agricoles et gérez votre exploitation";
+  //     default:
+  //       return "";
+  //   }
+  // };
 
   if (isAuthenticated()) {
     return (
@@ -215,177 +215,125 @@ const Register: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <span className="text-4xl mr-3">🌱</span>
-              <h1 className="text-3xl font-bold text-green-600">AgriEcom</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center p-3">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-xl shadow-lg p-4 mt-0 border border-gray-200">
+          {/* En-tête ultra-compacte */}
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-2">
+                <span className="text-lg text-green-600">🌱</span>
+              </div>
+              <h1 className="text-xl font-bold text-green-600">AgroBusiness</h1>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <h2 className="text-lg font-bold text-gray-800">
               Créer votre compte
             </h2>
-            <p className="text-gray-600">Rejoignez notre communauté agricole</p>
           </div>
 
+          {/* Messages d'alerte ultra-compacts */}
           {message.text && (
             <div
-              className={`mb-6 p-4 rounded-lg border ${
+              className={`mb-3 p-2 rounded border text-xs ${
                 message.type === "success"
                   ? "bg-green-50 border-green-200 text-green-800"
                   : "bg-blue-50 border-blue-200 text-blue-800"
               }`}
             >
               <div className="flex items-center">
-                <span className="text-xl mr-3">
+                <span className="mr-1">
                   {message.type === "success" ? "✅" : "ℹ️"}
                 </span>
-                <span className="font-medium">{message.text}</span>
+                <span>{message.text}</span>
               </div>
             </div>
           )}
 
           {errors.submit && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-start">
-                <span className="text-xl text-red-600 mr-3 mt-1">❌</span>
-                <div>
-                  <p className="font-semibold text-red-800">
-                    Erreur d'inscription
-                  </p>
-                  <p className="text-red-700 mt-1">{errors.submit}</p>
-                </div>
+            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs">
+              <div className="flex items-center">
+                <span className="text-red-500 mr-1">❌</span>
+                <span className="text-red-700">{errors.submit}</span>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Informations personnelles */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              <h3 className="text-xs font-semibold text-gray-800 mb-2 uppercase">
                 Informations personnelles
               </h3>
-
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>👤</span>
-                      Nom complet *
-                    </span>
-                  </label>
                   <input
-                    id="name"
                     type="text"
                     name="name"
-                    placeholder="Votre nom complet"
+                    placeholder="Nom complet *"
                     value={form.name}
                     onChange={handleChange}
                     disabled={loading}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 ${
                       errors.name
                         ? "border-red-500 bg-red-50"
                         : "border-gray-300"
                     }`}
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                    <p className="mt-1 text-xs text-red-600">{errors.name}</p>
                   )}
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>📧</span>
-                      Adresse email *
-                    </span>
-                  </label>
                   <input
-                    id="email"
                     type="email"
                     name="email"
-                    placeholder="votre@email.com"
+                    placeholder="Email *"
                     value={form.email}
                     onChange={handleChange}
                     disabled={loading}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 ${
                       errors.email
                         ? "border-red-500 bg-red-50"
                         : "border-gray-300"
                     }`}
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
                   )}
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>📞</span>
-                      Téléphone
-                    </span>
-                  </label>
+                <div className="grid grid-cols-2 gap-2">
                   <input
-                    id="phone"
                     type="tel"
                     name="phone"
-                    placeholder="+221 XX XXX XX XX"
+                    placeholder="Téléphone"
                     value={form.phone}
                     onChange={handleChange}
                     disabled={loading}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                      errors.phone
-                        ? "border-red-500 bg-red-50"
-                        : "border-gray-300"
-                    }`}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500"
                   />
-                  {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="address"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>🏠</span>
-                      Adresse
-                    </span>
-                  </label>
-                  <textarea
-                    id="address"
+                  <input
+                    type="text"
                     name="address"
-                    placeholder="Votre adresse complète"
+                    placeholder="Adresse"
                     value={form.address}
                     onChange={handleChange}
                     disabled={loading}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-vertical disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
               </div>
             </div>
 
+            {/* Type de compte */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              <h3 className="text-xs font-semibold text-gray-800 mb-2 uppercase">
                 Type de compte *
               </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex gap-2">
                 {(["client", "producer"] as const).map((role) => (
-                  <label key={role} className="cursor-pointer">
+                  <label key={role} className="flex-1 cursor-pointer">
                     <input
                       type="radio"
                       name="role"
@@ -396,241 +344,149 @@ const Register: React.FC = () => {
                       className="hidden"
                     />
                     <div
-                      className={`p-4 border-2 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`p-2 border rounded-lg text-center text-xs ${
                         form.role === role
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-300 bg-gray-50 hover:border-gray-400"
-                      } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                          ? "border-green-500 bg-green-50 text-green-700"
+                          : "border-gray-300 bg-gray-50 text-gray-600"
+                      }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="text-2xl">
-                          {role === "client" ? "🛒" : "👨‍🌾"}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-800">
-                            {role === "client" ? "Acheteur" : "Producteur"}
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {getRoleDescription(role)}
-                          </div>
-                        </div>
-                      </div>
+                      {role === "client" ? "🛒 Client" : "👨‍🌾 Vendeur"}
                     </div>
                   </label>
                 ))}
               </div>
             </div>
 
+            {/* Exploitation agricole */}
             {form.role === "producer" && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
-                  Informations de l'exploitation
+                <h3 className="text-xs font-semibold text-gray-800 mb-2 uppercase">
+                  Exploitation
                 </h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="farmName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>🏡</span>
-                        Nom de l'exploitation *
-                      </span>
-                    </label>
-                    <input
-                      id="farmName"
-                      type="text"
-                      name="farmName"
-                      placeholder="Nom de votre ferme ou exploitation"
-                      value={form.farmName}
-                      onChange={handleChange}
-                      disabled={loading}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                        errors.farmName
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-300"
-                      }`}
-                    />
-                    {errors.farmName && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.farmName}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>📄</span>
-                        Description
-                      </span>
-                    </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      placeholder="Décrivez votre exploitation, vos spécialités, vos pratiques agricoles..."
-                      value={form.description}
-                      onChange={handleChange}
-                      disabled={loading}
-                      rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-vertical disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    name="farmName"
+                    placeholder="Nom exploitation *"
+                    value={form.farmName}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 ${
+                      errors.farmName
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  {errors.farmName && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {errors.farmName}
+                    </p>
+                  )}
+                  <textarea
+                    name="description"
+                    placeholder="Description..."
+                    value={form.description}
+                    onChange={handleChange}
+                    disabled={loading}
+                    rows={1}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 resize-none"
+                  />
                 </div>
               </div>
             )}
 
+            {/* Sécurité */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              <h3 className="text-xs font-semibold text-gray-800 mb-2 uppercase">
                 Sécurité
               </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+              <div className="space-y-2">
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Mot de passe *"
+                    value={form.password}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 pr-8 ${
+                      errors.password
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("password")}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"
                   >
-                    <span className="flex items-center gap-2">
-                      <span>🔒</span>
-                      Mot de passe *
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      placeholder="Votre mot de passe"
-                      value={form.password}
-                      onChange={handleChange}
-                      disabled={loading}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 pr-12 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                        errors.password
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-300"
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("password")}
-                      disabled={loading}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
-                    >
-                      {showPassword ? "🙈" : "👁️"}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.password}
-                    </p>
-                  )}
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
                 </div>
+                {errors.password && (
+                  <p className="text-xs text-red-600">{errors.password}</p>
+                )}
 
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="Confirmer mot de passe *"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 pr-8 ${
+                      errors.confirmPassword
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("confirmPassword")}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"
                   >
-                    <span className="flex items-center gap-2">
-                      <span>✅</span>
-                      Confirmer le mot de passe *
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      placeholder="Confirmez votre mot de passe"
-                      value={form.confirmPassword}
-                      onChange={handleChange}
-                      disabled={loading}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 pr-12 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                        errors.confirmPassword
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-300"
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        togglePasswordVisibility("confirmPassword")
-                      }
-                      disabled={loading}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
-                    >
-                      {showConfirmPassword ? "🙈" : "👁️"}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.confirmPassword}
-                    </p>
-                  )}
+                    {showConfirmPassword ? "🙈" : "👁️"}
+                  </button>
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-600">
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
             </div>
 
+            {/* Bouton de soumission */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Création du compte...</span>
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Création...</span>
                 </>
               ) : (
                 <>
-                  <span className="text-xl">🚀</span>
+                  <span>🚀</span>
                   <span>Créer mon compte</span>
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center space-y-4">
-            <p className="text-gray-600">
+          {/* Liens supplémentaires */}
+          <div className="mt-4 text-center">
+            <p className="text-gray-600 text-xs">
               Déjà un compte ?{" "}
               <Link
                 to="/login"
-                className="text-green-600 hover:text-green-700 font-semibold transition-colors"
+                className="text-green-600 hover:text-green-700 font-semibold"
               >
                 Se connecter
               </Link>
-            </p>
-            <Link
-              to="/"
-              className="inline-flex items-center text-gray-500 hover:text-gray-700 transition-colors text-sm"
-            >
-              <span className="mr-1">←</span>
-              Retour à l'accueil
-            </Link>
-          </div>
-
-          <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-            <p className="text-gray-600 text-sm">
-              En créant un compte, vous acceptez nos{" "}
-              <a
-                href="#"
-                className="text-green-600 hover:text-green-700 font-medium"
-              >
-                conditions d'utilisation
-              </a>{" "}
-              et notre{" "}
-              <a
-                href="#"
-                className="text-green-600 hover:text-green-700 font-medium"
-              >
-                politique de confidentialité
-              </a>
-              .
             </p>
           </div>
         </div>
