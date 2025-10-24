@@ -79,7 +79,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     e.preventDefault();
     try {
       setLoading(true);
-      await productService.updateProduct(product.id, formData, isAdmin);
+      await productService.updateProduct(product.id, formData);
       Swal.fire("Succès", "Produit modifié avec succès", "success");
       if (onProductUpdated) onProductUpdated();
       onClose();

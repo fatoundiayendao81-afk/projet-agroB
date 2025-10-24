@@ -258,7 +258,6 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
-
       {/* === FEATURES SECTION === */}
       <section className="py-12 bg-gradient-to-b from-white to-green-50">
         <div className="max-w-6xl mx-auto px-4">
@@ -374,7 +373,7 @@ const Home: React.FC = () => {
 
           {products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-4 gap-6 mb-8">
                 {products.map((product) => (
                   <div key={product.id} className="flex">
                     <ProductCard product={product} />

@@ -77,20 +77,7 @@ const ProductList: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* === EN-TÊTE === */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-2xl shadow-lg mb-4">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                   <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Nos Produits Frais
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -295,11 +282,12 @@ const ProductList: React.FC = () => {
           </div>
         )}
 
-        {/* === GRILLE DES PRODUITS - 5 PAR LIGNE === */}
+        {/* === GRILLE DES PRODUITS - 6 PAR LIGNE === */}
+
         {products.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <div className="max-w-3xl mx-auto">
             <svg
-              className="w-16 h-16 text-gray-400 mx-auto mb-4"
+              className="w-16 h-16 text-gray-400 mx-5 mb-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -311,6 +299,7 @@ const ProductList: React.FC = () => {
                 d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
             </svg>
+           
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Aucun produit trouvé
             </h3>
@@ -330,7 +319,7 @@ const ProductList: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-3 gap-6 mb-8">
               {products.map((product) => (
                 <div key={product.id} className="flex">
                   <ProductCard product={product} />
@@ -376,6 +365,7 @@ const ProductList: React.FC = () => {
         )}
       </div>
     </div>
+    
   );
 };
 
